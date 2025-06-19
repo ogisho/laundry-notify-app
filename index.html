@@ -39,28 +39,26 @@
   </div>
   <div class="error-message" id="error-message"></div>
 
-  <script>
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyARywEj_CdDQuYckdqmagXN6si29agDQgKuPA2r9gr8EwJZcFC6FGsm31co_Cw0u92/exec"; // ← 同じURLを使用
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  const liffId = "2007511869-DXmQ2r0r"; // ←友くんのLIFF ID
+  const GAS_BASE_URL = "https://cors-proxy.ogisho-other.workers.dev";
 
   async function loadStatus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get("userId");
-
-    if (!userId) {
-      document.getElementById("error-message").textContent = "ユーザーIDがURLに含まれていません。";
-      return;
-    }
-
     try {
-      const res = await fetch(`${GAS_BASE_URL}?userId=${encodeURIComponent(userId)}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Line-User-Id": userId
-        }
-      });
+      await liff.init({ liffId });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
+      const profile = await liff.getProfile();
+      const userId = profile.userId;
+      console.log("🔵 LIFF userId:", userId);  // ← ここにログ出る！
+
+      const res = await fetch(`${GAS_BASE_URL}?userId=${encodeURIComponent(userId)}`);
       const json = await res.json();
+
       if (!json.success) throw new Error(json.message);
 
       const data = json.data;
