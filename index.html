@@ -27,6 +27,11 @@
       color: red;
       margin-top: 20px;
     }
+    .debug-message {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -38,6 +43,7 @@
     <div class="status-item"><span class="status-label">郵便番号:</span><span id="status-zipcode">読み込み中...</span></div>
   </div>
   <div class="error-message" id="error-message"></div>
+  <div class="debug-message" id="debug-message"></div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
@@ -45,25 +51,30 @@
   const GAS_BASE_URL = "https://cors-proxy.ogisho-other.workers.dev";
 
   async function loadStatus() {
+    const debugEl = document.getElementById("debug-message");
+
     try {
       await liff.init({ liffId });
+
       if (!liff.isLoggedIn()) {
+        debugEl.textContent = "🔴 LIFF未ログイン → login処理へ";
         liff.login();
         return;
       }
 
       const profile = await liff.getProfile();
       const userId = profile.userId;
-      console.log("🔵 LIFF userId:", userId);  // ← ここにログ出る！
+      debugEl.textContent = "🟢 userId取得成功: " + userId;
 
       const res = await fetch(GAS_BASE_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ userId })
-});
-const json = await res.json();
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ userId })
+      });
+
+      const json = await res.json();
 
       if (!json.success) throw new Error(json.message);
 
@@ -72,8 +83,11 @@ const json = await res.json();
       document.getElementById("status-days").textContent = data.days || "未設定";
       document.getElementById("status-time").textContent = data.time || "未設定";
       document.getElementById("status-zipcode").textContent = data.zipcode || "未設定";
+
+      debugEl.textContent += " / ✅ fetch成功";
     } catch (e) {
       document.getElementById("error-message").textContent = "エラー: " + e.message;
+      debugEl.textContent += " / ⚠️ " + e.message;
     }
   }
 
