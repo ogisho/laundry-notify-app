@@ -1,145 +1,248 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>通知設定ステータス</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>洗濯通知ステータス</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
-    h1 { font-size: 24px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 16px; margin: 12px 0; }
-    .setting-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
-    .edit-btn { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    .edit-btn:hover { background-color: #0056b3; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
-    .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; width: 90%; max-width: 400px; border-radius: 10px; }
-    .modal-actions { display: flex; justify-content: space-between; margin-top: 16px; }
-    .status-block { margin-left: 16px; font-size: 14px; color: #555; }
-    select, input[type="text"] { width: 100%; margin: 5px 0; padding: 4px; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    .status-area {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status-item {
+      margin-bottom: 10px;
+    }
+    .status-label {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .edit-button {
+      margin-left: 12px;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .error-message {
+      color: red;
+      margin-top: 20px;
+    }
+    .debug-message {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+      white-space: pre-wrap;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .modal-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
   </style>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    let userId = null;
-    const GAS_DEPLOYED_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec";
+</head>
+<body>
+  <h2>洗濯通知ステータス</h2>
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
-      userId = params.get('userId');
-      console.log('取得したuserId:', userId);
-    });
+  <div class="status-area" id="status-area">
+    <div class="status-item">
+      <span class="status-label">通知:</span><span id="status-notify">読み込み中...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">曜日:</span><span id="status-days">読み込み中...</span>
+      <button class="edit-button" onclick="openEditModal()">編集</button>
+    </div>
+    <div class="status-item">
+      <span class="status-label">時刻:</span><span id="status-time">読み込み中...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">郵便番号:</span><span id="status-zipcode">読み込み中...</span>
+      <button class="edit-button" onclick="openEditModal()">編集</button>
+    </div>
+    <div class="status-item">
+      <span class="status-label">全体通知:</span>
+      <label class="switch">
+        <input type="checkbox" id="master-toggle" onchange="handleMasterToggle()" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
 
-    function openModal(type) {
-      document.getElementById(`modal-${type}`).style.display = 'block';
-    }
-    function closeModal(type) {
-      document.getElementById(`modal-${type}`).style.display = 'none';
-    }
+  <div class="error-message" id="error-message"></div>
+  <div class="debug-message" id="debug-message"></div>
 
-    function saveSettings() {
-      const toggle = document.getElementById('laundry-toggle-select').value;
-      const hour = document.getElementById('hour-select').value;
-      const minute = document.getElementById('minute-select').value;
-      const zip = document.getElementById('zip-code').value;
-      const days = [...document.querySelectorAll('#modal-laundry input[type="checkbox"]:checked')].map(cb => cb.value);
+  <!-- 🔧 モーダル -->
+  <div class="modal" id="edit-modal">
+    <div class="modal-content">
+      <h3>通知設定の編集</h3>
+      <label>郵便番号：<input type="text" id="edit-zipcode" /></label>
+      <div>
+        <label><input type="checkbox" value="月" /> 月</label>
+        <label><input type="checkbox" value="火" /> 火</label>
+        <label><input type="checkbox" value="水" /> 水</label><br />
+        <label><input type="checkbox" value="木" /> 木</label>
+        <label><input type="checkbox" value="金" /> 金</label>
+        <label><input type="checkbox" value="土" /> 土</label>
+        <label><input type="checkbox" value="日" /> 日</label>
+      </div>
+      <div class="modal-actions">
+        <button onclick="saveEdit()">保存</button>
+        <button onclick="closeEditModal()">キャンセル</button>
+      </div>
+    </div>
+  </div>
 
-      if (!/^[0-9]{7}$/.test(zip)) {
-        alert("郵便番号は7桁の数字で入力してください");
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  const liffId = "2007511869-DXmQ2r0r";
+  const GAS_BASE_URL = "https://cors-proxy.ogisho-other.workers.dev";
+  let currentUserId = "";
+
+  async function loadStatus() {
+    const debugEl = document.getElementById("debug-message");
+    const errorEl = document.getElementById("error-message");
+
+    try {
+      await liff.init({ liffId });
+
+      if (!liff.isLoggedIn()) {
+        debugEl.textContent = "🔴 LIFF未ログイン → login処理へ";
+        liff.login();
         return;
       }
 
-      document.getElementById('laundry-toggle').innerText = toggle;
-      document.getElementById('laundry-time-status').innerText = `${hour}:${minute}`;
-      document.getElementById('laundry-days-status').innerText = days.join('') || '未登録';
-      document.getElementById('laundry-zip-status').innerText = zip;
+      const profile = await liff.getProfile();
+      const userId = profile.userId;
+      currentUserId = userId;
+      debugEl.textContent = `🟢 userId取得成功: ${userId}\n`;
 
-      // GASに送信
-      const payload = {
-        userId: userId,
-        laundry: {
-          on: toggle === "ON",
-          hour: hour,
-          minute: minute,
-          days: days,
-          zip: zip
-        }
-      };
-
-      fetch(GAS_DEPLOYED_URL, {
+      const res = await fetch(GAS_BASE_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || "保存しました");
-        closeModal('laundry');
-      })
-      .catch(error => {
-        console.error("送信失敗:", error);
-        alert("保存に失敗しました");
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId })
       });
+
+      const text = await res.text();
+      debugEl.textContent += `📥 レスポンス: ${text}\n`;
+
+      const json = JSON.parse(text);
+      if (!json.success) throw new Error(json.message);
+
+      const data = json.data;
+      document.getElementById("status-notify").textContent = data.notify || "未設定";
+      document.getElementById("status-days").textContent = data.days || "未設定";
+      document.getElementById("status-time").textContent = data.time || "未設定";
+      document.getElementById("status-zipcode").textContent = data.zipcode || "未設定";
+      document.getElementById("master-toggle").checked = (data.notify === "ON");
+
+    } catch (e) {
+      errorEl.textContent = "エラー: " + e.message;
+      debugEl.textContent += `⚠️ ${e.message}`;
     }
+  }
 
-    window.onload = () => {
-      const hourSelect = document.getElementById('hour-select');
-      const minuteSelect = document.getElementById('minute-select');
-      for (let h = 0; h <= 23; h++) {
-        hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
-      }
-      for (let m = 0; m <= 55; m += 5) {
-        minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
-      }
-    };
-  </script>
-</head>
-<body>
-<h1>現在の通知設定</h1>
-<div class="card">
-  <div class="setting-row">
-    <div>
-      🧺洗濯指数（<span id="laundry-toggle">OFF</span>）
-      <div class="status-block">
-        ・通知時間：<span id="laundry-time-status">未登録</span><br/>
-        ・通知曜日：<span id="laundry-days-status">未登録</span><br/>
-        ・郵便番号：<span id="laundry-zip-status">未登録</span>
-      </div>
-    </div>
-    <button class="edit-btn" onclick="openModal('laundry')">編集</button>
-  </div>
-</div>
+  function openEditModal() {
+    document.getElementById("edit-modal").style.display = "flex";
+  }
 
-<!-- モーダル -->
-<div class="modal" id="modal-laundry">
-  <div class="modal-content">
-    <h2>洗濯指数の編集</h2>
-    <label>通知ON/OFF：</label>
-    <select id="laundry-toggle-select">
-      <option value="ON">ON</option>
-      <option value="OFF">OFF</option>
-    </select><br/>
-    <label>通知時間：</label>
-    <div style="display: flex; gap: 5px;">
-      <select id="hour-select"></select>
-      <select id="minute-select"></select>
-    </div><br/>
-    <label>通知曜日：</label><br/>
-    <label><input type="checkbox" value="月"/> 月</label>
-    <label><input type="checkbox" value="火"/> 火</label>
-    <label><input type="checkbox" value="水"/> 水</label>
-    <label><input type="checkbox" value="木"/> 木</label>
-    <label><input type="checkbox" value="金"/> 金</label>
-    <label><input type="checkbox" value="土"/> 土</label>
-    <label><input type="checkbox" value="日"/> 日</label>
-    <label><input type="checkbox" value="祝"/> 祝</label><br/><br/>
-    <label>郵便番号（7桁、数字のみ）：</label>
-    <input id="zip-code" maxlength="7" placeholder="例：1234567" type="text"/>
-    <div class="modal-actions">
-      <button onclick="saveSettings()">保存</button>
-      <button onclick="closeModal('laundry')">キャンセル</button>
-    </div>
-  </div>
-</div>
+  function closeEditModal() {
+    document.getElementById("edit-modal").style.display = "none";
+  }
+
+  function saveEdit() {
+    const zip = document.getElementById("edit-zipcode").value.trim();
+    const dayChecks = Array.from(document.querySelectorAll('#edit-modal input[type="checkbox"]:checked'));
+    const days = dayChecks.map(c => c.value).join(",");
+
+    fetch(GAS_BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: currentUserId,
+        zipcode: zip,
+        days: days
+      })
+    }).then(() => {
+      closeEditModal();
+      location.reload();
+    });
+  }
+
+  function handleMasterToggle() {
+    const isOn = document.getElementById("master-toggle").checked;
+    fetch(GAS_BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: currentUserId,
+        notify: isOn ? "ON" : "OFF"
+      })
+    });
+  }
+
+  window.onload = loadStatus;
+</script>
 </body>
 </html>
