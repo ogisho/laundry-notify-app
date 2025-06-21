@@ -3,47 +3,85 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>通知設定画面</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    h2 { margin-bottom: 16px; }
     .card {
-      background: white;
+      background: #fff;
       border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       padding: 16px;
-      margin: 16px 0;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    .card h3 {
-      margin-top: 0;
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
     }
-    .setting-row {
+    .row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 10px 0;
+      margin: 6px 0;
     }
-    .setting-label {
-      font-weight: bold;
+    .row label {
+      flex: 1;
+      text-align: left;
+    }
+    .row span {
+      flex: 1;
+      text-align: left;
+    }
+    .row .right {
+      text-align: right;
     }
     .edit-btn {
       background-color: #007bff;
       color: white;
       border: none;
-      padding: 6px 12px;
+      padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
-      margin-left: 10px;
+      margin-left: 8px;
     }
     .edit-btn:hover {
       background-color: #0056b3;
     }
-    .toggle {
-      margin-left: 10px;
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 20px;
+    }
+    .toggle-switch input {
+      display: none;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      background-color: #ccc;
+      border-radius: 20px;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      transition: 0.4s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: #4caf50;
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
     }
   </style>
 </head>
@@ -51,16 +89,19 @@
   <h2>通知設定画面</h2>
 
   <div class="card">
-    <h3>通知メニュー</h3>
-    <div class="setting-row">
-      <span class="setting-label">通知設定:</span>
-      <label class="toggle">
-        <input type="checkbox" />
-      </label>
+    <div class="section-title">通知メニュー</div>
+    <div class="row">
+      <label>通知設定:</label>
+      <div class="right">
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleNotify">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
-    <div class="setting-row">
-      <span class="setting-label">通知時間:</span>
-      <div>
+    <div class="row">
+      <label>通知時間:</label>
+      <div class="right">
         <span>7:00</span>
         <button class="edit-btn">編集</button>
       </div>
@@ -68,16 +109,21 @@
   </div>
 
   <div class="card">
-    <h3>洗濯指数</h3>
-    <div class="setting-row">
-      <span class="setting-label">通知曜日:</span>
-      <span>月火水</span>
+    <div class="section-title">洗濯指数</div>
+    <div class="row">
+      <label>通知曜日:</label>
+      <div class="right">
+        <span>月火水</span>
+        <button class="edit-btn">編集</button>
+      </div>
     </div>
-    <div class="setting-row">
-      <span class="setting-label">郵便番号:</span>
-      <span>123-4567</span>
+    <div class="row">
+      <label>郵便番号:</label>
+      <div class="right">
+        <span>123-4567</span>
+        <button class="edit-btn">編集</button>
+      </div>
     </div>
   </div>
-
 </body>
 </html>
