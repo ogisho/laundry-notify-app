@@ -239,6 +239,7 @@
     try {
       const res = await fetch(`${GAS_URL}?userId=${userId}`);
       const json = await res.json();
+      console.log("fetchSettings response:", json);
       if (!json.success) return;
       const { notify, time, days, zipcode } = json.data;
 
@@ -258,6 +259,7 @@
         cb.checked = days.includes(cb.value);
       });
     } catch (e) {
+      console.error("fetchSettings エラー:", e);
       alert("設定取得に失敗しました: " + e.message);
     }
   }
@@ -276,6 +278,7 @@
       });
 
       const json = await res.json();
+      console.log("saveNotifySettings response:", json);
 
       if (json.success) {
         closeModal("notify");
@@ -284,6 +287,7 @@
         alert("エラー: " + (json.message || "保存に失敗しました"));
       }
     } catch (e) {
+      console.error("saveNotifySettings エラー:", e);
       alert("通信エラーが発生しました: " + e.message);
     }
   }
@@ -307,6 +311,7 @@
       });
 
       const json = await res.json();
+      console.log("saveLaundrySettings response:", json);
 
       if (json.success) {
         closeModal("laundry");
@@ -315,6 +320,7 @@
         alert("エラー: " + (json.message || "保存に失敗しました"));
       }
     } catch (e) {
+      console.error("saveLaundrySettings エラー:", e);
       alert("通信エラーが発生しました: " + e.message);
     }
   }
