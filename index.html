@@ -19,6 +19,7 @@
       font-weight: bold;
       margin-bottom: 10px;
       font-size: 16px;
+      text-align: left;
     }
     .row {
       display: flex;
@@ -26,17 +27,10 @@
       align-items: center;
       margin: 6px 0;
     }
-    .left-group {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      flex-grow: 1;
-    }
-    .left-group label, .left-group span {
+    .row label,
+    .row span {
+      flex: 1;
       text-align: left;
-    }
-    .right-group {
-      text-align: right;
     }
     .edit-btn {
       background-color: #007bff;
@@ -45,7 +39,7 @@
       padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
-      margin-left: 12px;
+      margin-left: 8px;
     }
     .edit-btn:hover {
       background-color: #0056b3;
@@ -54,6 +48,7 @@
       position: relative;
       width: 40px;
       height: 20px;
+      margin-left: 10px;
     }
     .toggle-switch input {
       display: none;
@@ -84,53 +79,153 @@
     input:checked + .toggle-slider:before {
       transform: translateX(20px);
     }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      min-width: 300px;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+    }
+    .modal-content label {
+      display: block;
+      margin: 8px 0 4px;
+    }
+    .modal-content select,
+    .modal-content input[type="text"] {
+      width: 100%;
+    }
+    .modal-content .buttons {
+      margin-top: 16px;
+      text-align: right;
+    }
+    .modal-content .buttons button {
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
   <h2>通知設定画面</h2>
 
   <div class="card">
-    <div class="section-title">通知メニュー</div>
     <div class="row">
-      <label>通知設定:</label>
-      <div class="right-group">
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggleNotify">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
+      <span class="section-title">通知メニュー</span>
+      <button class="edit-btn" onclick="openModal('menu')">編集</button>
     </div>
     <div class="row">
-      <div class="left-group">
-        <label>通知時間:</label>
-        <span>7:00</span>
-      </div>
-      <div class="right-group">
-        <button class="edit-btn">編集</button>
-      </div>
+      <label>通知設定：</label>
+      <span id="notifyStatus">ON</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleNotify" checked onchange="toggleNotifyStatus()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="row">
+      <label>通知時間：</label>
+      <span id="notifyTime">12:30</span>
     </div>
   </div>
 
   <div class="card">
-    <div class="section-title">洗濯指数</div>
     <div class="row">
-      <div class="left-group">
-        <label>通知曜日:</label>
-        <span>月火水</span>
-      </div>
-      <div class="right-group">
-        <button class="edit-btn">編集</button>
-      </div>
+      <span class="section-title">洗濯指数</span>
+      <button class="edit-btn" onclick="openModal('laundry')">編集</button>
     </div>
     <div class="row">
-      <div class="left-group">
-        <label>郵便番号:</label>
-        <span>123-4567</span>
+      <label>通知曜日：</label>
+      <span id="notifyDays">月火水</span>
+    </div>
+    <div class="row">
+      <label>郵便番号：</label>
+      <span id="notifyZip">123-4567</span>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-laundry">
+    <div class="modal-content">
+      <h3>洗濯指数の編集</h3>
+      <label>通知時間：</label>
+      <select id="hourSelect"></select>時
+      <select id="minuteSelect"></select>分
+
+      <label>通知曜日：</label>
+      <div>
+        <label><input type="checkbox" class="day-check" value="月" checked>月</label>
+        <label><input type="checkbox" class="day-check" value="火" checked>火</label>
+        <label><input type="checkbox" class="day-check" value="水" checked>水</label>
+        <label><input type="checkbox" class="day-check" value="木" checked>木</label>
+        <label><input type="checkbox" class="day-check" value="金" checked>金</label>
+        <label><input type="checkbox" class="day-check" value="土" checked>土</label>
+        <label><input type="checkbox" class="day-check" value="日" checked>日</label>
       </div>
-      <div class="right-group">
-        <button class="edit-btn">編集</button>
+
+      <label>郵便番号：</label>
+      <input type="text" id="zipcodeInput" maxlength="7" pattern="\d{7}">
+
+      <div class="buttons">
+        <button onclick="closeModal('laundry')">キャンセル</button>
+        <button onclick="saveLaundrySettings()">保存</button>
       </div>
     </div>
   </div>
+
+  <script>
+    function toggleNotifyStatus() {
+      const toggle = document.getElementById('toggleNotify');
+      document.getElementById('notifyStatus').textContent = toggle.checked ? 'ON' : 'OFF';
+    }
+
+    function openModal(type) {
+      document.getElementById('modal-' + type).style.display = 'flex';
+    }
+
+    function closeModal(type) {
+      document.getElementById('modal-' + type).style.display = 'none';
+    }
+
+    function saveLaundrySettings() {
+      const hour = document.getElementById('hourSelect').value;
+      const minute = document.getElementById('minuteSelect').value;
+      document.getElementById('notifyTime').textContent = hour + ":" + minute;
+
+      const checkedDays = Array.from(document.querySelectorAll('.day-check:checked')).map(cb => cb.value).join('');
+      document.getElementById('notifyDays').textContent = checkedDays;
+
+      const zipcode = document.getElementById('zipcodeInput').value;
+      if (!zipcode.match(/^\d{7}$/)) {
+        alert("郵便番号は半角数字7桁で入力してください。");
+        return;
+      }
+      document.getElementById('notifyZip').textContent = zipcode.replace(/(\d{3})(\d{4})/, '$1-$2');
+
+      closeModal('laundry');
+    }
+
+    function populateTimeOptions() {
+      const hourSelect = document.getElementById('hourSelect');
+      const minuteSelect = document.getElementById('minuteSelect');
+      for (let i = 0; i < 24; i++) {
+        const opt = document.createElement('option');
+        opt.value = opt.text = String(i).padStart(2, '0');
+        hourSelect.appendChild(opt);
+      }
+      for (let i = 0; i < 60; i += 5) {
+        const opt = document.createElement('option');
+        opt.value = opt.text = String(i).padStart(2, '0');
+        minuteSelect.appendChild(opt);
+      }
+    }
+
+    window.onload = populateTimeOptions;
+  </script>
 </body>
 </html>
