@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>通知設定画面</title>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <style>
@@ -14,6 +14,7 @@
       padding: 16px;
       margin-bottom: 20px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
     }
     .section-title {
       font-weight: bold;
@@ -21,42 +22,31 @@
       font-size: 16px;
       text-align: left;
     }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 6px 0;
-    }
-    .row label, .row span {
-      flex: 1;
-      text-align: left;
-    }
-    .right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
     .edit-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
       background-color: #007bff;
       color: white;
       border: none;
       padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
-      margin-left: 8px;
     }
-    .edit-btn:hover {
-      background-color: #0056b3;
+    .edit-btn:hover { background-color: #0056b3; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0;
     }
+    .row label, .row span { flex: 1; text-align: left; }
     .toggle-switch {
       position: relative;
       width: 40px;
       height: 20px;
-      margin-left: 10px;
     }
-    .toggle-switch input {
-      display: none;
-    }
+    .toggle-switch input { display: none; }
     .toggle-slider {
       position: absolute;
       cursor: pointer;
@@ -77,104 +67,140 @@
       transition: 0.4s;
       border-radius: 50%;
     }
-    input:checked + .toggle-slider {
-      background-color: #4caf50;
+    input:checked + .toggle-slider { background-color: #4caf50; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
     }
-    input:checked + .toggle-slider:before {
-      transform: translateX(20px);
+    .modal-content {
+      background: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 10px;
+    }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content label { display: block; margin-top: 10px; }
+    .modal-content input[type="text"], .modal-content select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .modal-content .checkbox-group {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .modal-content .checkbox-group label {
+      flex: 1 1 30%;
+      margin: 5px 0;
+    }
+    .modal-close {
+      margin-top: 15px;
+      text-align: right;
+    }
+    .modal-close button {
+      padding: 6px 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
   <h2>通知設定画面</h2>
-
   <div class="card">
-    <div class="section-title">通知メニュー</div>
+    <div class="section-title">通知メニュー <button class="edit-btn" onclick="openModal('menu')">編集</button></div>
     <div class="row">
       <label>通知設定：</label>
-      <div class="right">
-        <span id="statusText">OFF</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggleNotify">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
+      <span id="statusText">OFF</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleNotify">
+        <span class="toggle-slider"></span>
+      </label>
     </div>
     <div class="row">
       <label>通知時間：</label>
-      <div class="right">
-        <span id="notifyTime">--:--</span>
-      </div>
-    </div>
-    <div class="row">
-      <div style="margin-left:auto;">
-        <button class="edit-btn">編集</button>
-      </div>
+      <span id="notifyTime">--:--</span>
     </div>
   </div>
 
   <div class="card">
-    <div class="section-title">洗濯指数</div>
+    <div class="section-title">洗濯指数 <button class="edit-btn" onclick="openModal('laundry')">編集</button></div>
     <div class="row">
       <label>通知曜日：</label>
-      <div class="right">
-        <span id="notifyDays">--</span>
-      </div>
+      <span id="notifyDays">--</span>
     </div>
     <div class="row">
       <label>郵便番号：</label>
-      <div class="right">
-        <span id="zipcode">--</span>
-      </div>
+      <span id="zipcode">--</span>
     </div>
-    <div class="row">
-      <div style="margin-left:auto;">
-        <button class="edit-btn">編集</button>
-      </div>
+  </div>
+
+  <!-- モーダル -->
+  <div id="modal" class="modal">
+    <div class="modal-content" id="modalContent">
+      <!-- コンテンツはJSで挿入 -->
     </div>
   </div>
 
   <script>
-    let userId = '';
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+
+    function openModal(type) {
+      if (type === 'menu') {
+        modalContent.innerHTML = `
+          <h3>通知メニュー設定</h3>
+          <label>通知設定：
+            <input type="checkbox" id="modalToggle">
+          </label>
+          <label>通知時間：
+            <select id="hour">${[...Array(24).keys()].map(h => `<option>${h.toString().padStart(2, '0')}</option>`).join('')}</select>
+            ：
+            <select id="minute">${[...Array(12).keys()].map(m => `<option>${(m*5).toString().padStart(2,'0')}</option>`).join('')}</select>
+          </label>
+          <div class="modal-close"><button onclick="closeModal()">保存</button></div>
+        `;
+      } else if (type === 'laundry') {
+        modalContent.innerHTML = `
+          <h3>洗濯指数設定</h3>
+          <label>通知曜日：</label>
+          <div class="checkbox-group">
+            ${['月', '火', '水', '木', '金', '土', '日'].map(day => `<label><input type='checkbox' checked> ${day}</label>`).join('')}
+          </div>
+          <label>郵便番号：
+            <input type="text" maxlength="8" placeholder="123-4567" pattern="\\d{3}-\\d{4}" oninput="this.value=this.value.replace(/[^0-9\-]/g,'');">
+          </label>
+          <div class="modal-close"><button onclick="closeModal()">保存</button></div>
+        `;
+      }
+      modal.style.display = 'block';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+    }
 
     document.getElementById('toggleNotify').addEventListener('change', function () {
       document.getElementById('statusText').textContent = this.checked ? 'ON' : 'OFF';
     });
 
-    async function initializeLiff() {
-      try {
-        await liff.init({ liffId: '2007511869-DXmQ2r0r' });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          const profile = await liff.getProfile();
-          userId = profile.userId;
-          fetchSettings(userId);
-        }
-      } catch (error) {
-        console.error('LIFF init failed:', error);
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
       }
     }
-
-    function fetchSettings(userId) {
-      fetch('https://cors-proxy.ogisho-other.workers.dev/https://script.google.com/macros/s/YOUR_DEPLOYED_GAS_URL/exec?userId=' + userId)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            const s = data.data;
-            document.getElementById('statusText').textContent = s.notifyEnabled ? 'ON' : 'OFF';
-            document.getElementById('toggleNotify').checked = s.notifyEnabled;
-            document.getElementById('notifyTime').textContent = s.notifyTime || '--:--';
-            document.getElementById('notifyDays').textContent = s.notifyDays || '--';
-            document.getElementById('zipcode').textContent = s.zipcode || '--';
-          } else {
-            console.error('設定取得失敗:', data.message);
-          }
-        })
-        .catch(err => console.error('通信エラー:', err));
-    }
-
-    window.onload = initializeLiff;
   </script>
 </body>
 </html>
