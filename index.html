@@ -159,13 +159,10 @@
     </div>
   </div>
 
-  <!-- 通知モーダル -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
       <h3>通知メニューの編集</h3>
-      <label>通知設定：
-        <input type="checkbox" id="modalToggle">
-      </label><br><br>
+      <label>通知設定：<input type="checkbox" id="modalToggle"></label><br><br>
       <label>通知時間：
         <select id="hourSelect"></select>：<select id="minuteSelect"></select>
       </label>
@@ -176,7 +173,6 @@
     </div>
   </div>
 
-  <!-- 洗濯モーダル -->
   <div class="modal" id="modal-laundry">
     <div class="modal-content">
       <h3>洗濯指数の編集</h3>
@@ -201,6 +197,8 @@
 
   <script>
     let userId = '';
+    const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbwHy8oBY9f2Rzhrqzyx1GtuREEBT9VVjWztdYabudxPEm2EgKBcfNXF133d29dcs0dUNg/exec';
+    const CORS_PROXY_URL = 'https://cors-proxy.ogisho-other.workers.dev/';
 
     function openModal(type) {
       document.getElementById(`modal-${type}`).style.display = 'flex';
@@ -229,7 +227,8 @@
     }
 
     function fetchSettings(userId) {
-      fetch('https://cors-proxy.ogisho-other.workers.dev/https://script.google.com/macros/s/YOUR_DEPLOYED_GAS_URL/exec?userId=' + userId)
+      const url = `${CORS_PROXY_URL}${GAS_BASE_URL}?userId=${userId}`;
+      fetch(url)
         .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
@@ -248,9 +247,20 @@
       const enabled = document.getElementById('modalToggle').checked;
       const hour = document.getElementById('hourSelect').value;
       const minute = document.getElementById('minuteSelect').value;
+      const notifyTime = `${hour}:${minute}`;
+
       document.getElementById('statusText').textContent = enabled ? 'ON' : 'OFF';
       document.getElementById('toggleNotify').checked = enabled;
-      document.getElementById('notifyTime').textContent = `${hour}:${minute}`;
+      document.getElementById('notifyTime').textContent = notifyTime;
+
+      const payload = { userId, notifyEnabled: enabled, notifyTime };
+
+      fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
       closeModal('notify');
     }
 
@@ -263,12 +273,21 @@
         return;
       }
       error.style.display = 'none';
+
       document.getElementById('notifyDays').textContent = checkedDays;
       document.getElementById('zipcode').textContent = zip.slice(0,3) + '-' + zip.slice(3);
+
+      const payload = { userId, notifyDays: checkedDays, zipcode: zip };
+
+      fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
       closeModal('laundry');
     }
 
-    // 時間選択を生成
     for (let h = 0; h < 24; h++) {
       const opt = document.createElement('option');
       opt.value = opt.textContent = String(h).padStart(2, '0');
