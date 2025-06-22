@@ -157,6 +157,8 @@
       </div>
     </div>
   </div>
+  
+  <!-- 通知メニューモーダル -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
       <h3>通知メニューの編集</h3>
@@ -170,6 +172,8 @@
       </div>
     </div>
   </div>
+
+  <!-- 洗濯指数モーダル -->
   <div class="modal" id="modal-laundry">
     <div class="modal-content">
       <h3>洗濯指数の編集</h3>
@@ -191,6 +195,7 @@
       </div>
     </div>
   </div>
+
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwnorPK5XIKdz1PyzVHcax82Q9bfgE44eYbCBhJO1aiVPVxnhmoAW8OirTGnhwtB979kw/exec";
     const LIFF_ID = "2007511869-DXmQ2r0r";
@@ -201,6 +206,7 @@
       if (!liff.isLoggedIn()) liff.login();
       const profile = await liff.getProfile();
       userId = profile.userId;
+      populateTimeSelectors();
       fetchSettings();
     }
 
@@ -257,6 +263,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, notifyEnabled, notifyTime })
       });
+
       closeModal("notify");
       fetchSettings();
     }
@@ -276,14 +283,12 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, zipcode, notifyDays })
       });
+
       closeModal("laundry");
       fetchSettings();
     }
 
-    window.onload = () => {
-      populateTimeSelectors();
-      initializeLiff();
-    }
+    window.onload = initializeLiff;
   </script>
 </body>
 </html>
