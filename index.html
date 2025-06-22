@@ -196,110 +196,119 @@
   </div>
 
   <script>
-    let userId = '';
-    const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbwnorPK5XIKdz1PyzVHcax82Q9bfgE44eYbCBhJO1aiVPVxnhmoAW8OirTGnhwtB979kw/exec';
-    const CORS_PROXY_URL = 'https://cors-proxy.ogisho-other.workers.dev/';
+  let userId = '';
+  const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbwnorPK5XIKdz1PyzVHcax82Q9bfgE44eYbCBhJO1aiVPVxnhmoAW8OirTGnhwtB979kw/exec';
+  const CORS_PROXY_URL = 'https://cors-proxy.ogisho-other.workers.dev/';
 
-    function openModal(type) {
-      document.getElementById(`modal-${type}`).style.display = 'flex';
-    }
-    function closeModal(type) {
-      document.getElementById(`modal-${type}`).style.display = 'none';
-    }
+  function openModal(type) {
+    document.getElementById(`modal-${type}`).style.display = 'flex';
+  }
 
-    document.getElementById('toggleNotify').addEventListener('change', function () {
-      document.getElementById('statusText').textContent = this.checked ? 'ON' : 'OFF';
+  function closeModal(type) {
+    document.getElementById(`modal-${type}`).style.display = 'none';
+  }
+
+  document.getElementById('toggleNotify').addEventListener('change', function () {
+    document.getElementById('statusText').textContent = this.checked ? 'ON' : 'OFF';
+  });
+
+  async function initializeLiff() {
+    try {
+      await liff.init({ liffId: '2007511869-DXmQ2r0r' });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+        fetchSettings(userId);
+      }
+    } catch (error) {
+      console.error('LIFF init failed:', error);
+    }
+  }
+
+  function fetchSettings(userId) {
+    const url = `${CORS_PROXY_URL}${GAS_BASE_URL}?userId=${userId}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const s = data.data;
+          document.getElementById('statusText').textContent = s.notify === 'true' ? 'ON' : 'OFF';
+          document.getElementById('toggleNotify').checked = s.notify === 'true';
+          document.getElementById('notifyTime').textContent = s.time || '--:--';
+          document.getElementById('notifyDays').textContent = s.days || '--';
+          document.getElementById('zipcode').textContent = s.zipcode ? s.zipcode.slice(0,3)+'-'+s.zipcode.slice(3) : '--';
+
+          document.getElementById('modalToggle').checked = s.notify === 'true';
+          if (s.time) {
+            const [h, m] = s.time.split(':');
+            document.getElementById('hourSelect').value = h;
+            document.getElementById('minuteSelect').value = m;
+          }
+          if (s.days) {
+            document.querySelectorAll('.checkbox-group input').forEach(cb => {
+              cb.checked = s.days.includes(cb.value);
+            });
+          }
+          if (s.zipcode) {
+            document.getElementById('zipcodeInput').value = s.zipcode;
+          }
+        }
+      })
+      .catch(err => console.error('通信エラー:', err));
+  }
+
+  function saveNotifySettings() {
+    const enabled = document.getElementById('modalToggle').checked;
+    const hour = document.getElementById('hourSelect').value;
+    const minute = document.getElementById('minuteSelect').value;
+    const notifyTime = `${hour}:${minute}`;
+
+    const checkedDays = [...document.querySelectorAll('.checkbox-group input:checked')].map(cb => cb.value).join('');
+    const zip = document.getElementById('zipcodeInput').value;
+
+    const error = document.getElementById('zipcodeError');
+    if (!/^[0-9]{7}$/.test(zip)) {
+      error.style.display = 'block';
+      return;
+    }
+    error.style.display = 'none';
+
+    document.getElementById('statusText').textContent = enabled ? 'ON' : 'OFF';
+    document.getElementById('toggleNotify').checked = enabled;
+    document.getElementById('notifyTime').textContent = notifyTime;
+    document.getElementById('notifyDays').textContent = checkedDays;
+    document.getElementById('zipcode').textContent = zip.slice(0,3)+'-'+zip.slice(3);
+
+    const payload = { userId, notifyEnabled: enabled, notifyTime, notifyDays: checkedDays, zipcode: zip };
+
+    fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    async function initializeLiff() {
-      try {
-        await liff.init({ liffId: '2007511869-DXmQ2r0r' });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          const profile = await liff.getProfile();
-          userId = profile.userId;
-          fetchSettings(userId);
-        }
-      } catch (error) {
-        console.error('LIFF init failed:', error);
-      }
-    }
+    closeModal('notify');
+  }
 
-    function fetchSettings(userId) {
-      const url = `${CORS_PROXY_URL}${GAS_BASE_URL}?userId=${userId}`;
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            const s = data.data;
-            document.getElementById('statusText').textContent = s.notifyEnabled ? 'ON' : 'OFF';
-            document.getElementById('toggleNotify').checked = s.notifyEnabled;
-            document.getElementById('notifyTime').textContent = s.notifyTime || '--:--';
-            document.getElementById('notifyDays').textContent = s.notifyDays || '--';
-            document.getElementById('zipcode').textContent = s.zipcode || '--';
-          }
-        })
-        .catch(err => console.error('通信エラー:', err));
-    }
+  function saveLaundrySettings() {
+    saveNotifySettings();
+    closeModal('laundry');
+  }
 
-    function saveNotifySettings() {
-      const enabled = document.getElementById('modalToggle').checked;
-      const hour = document.getElementById('hourSelect').value;
-      const minute = document.getElementById('minuteSelect').value;
-      const notifyTime = `${hour}:${minute}`;
+  for (let h = 0; h < 24; h++) {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = String(h).padStart(2, '0');
+    document.getElementById('hourSelect').appendChild(opt);
+  }
+  for (let m = 0; m < 60; m += 5) {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = String(m).padStart(2, '0');
+    document.getElementById('minuteSelect').appendChild(opt);
+  }
 
-      document.getElementById('statusText').textContent = enabled ? 'ON' : 'OFF';
-      document.getElementById('toggleNotify').checked = enabled;
-      document.getElementById('notifyTime').textContent = notifyTime;
-
-      const payload = { userId, notifyEnabled: enabled, notifyTime };
-
-      fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      closeModal('notify');
-    }
-
-    function saveLaundrySettings() {
-      const checkedDays = [...document.querySelectorAll('.checkbox-group input:checked')].map(cb => cb.value).join('');
-      const zip = document.getElementById('zipcodeInput').value;
-      const error = document.getElementById('zipcodeError');
-      if (!/^\d{7}$/.test(zip)) {
-        error.style.display = 'block';
-        return;
-      }
-      error.style.display = 'none';
-
-      document.getElementById('notifyDays').textContent = checkedDays;
-      document.getElementById('zipcode').textContent = zip.slice(0,3) + '-' + zip.slice(3);
-
-      const payload = { userId, notifyDays: checkedDays, zipcode: zip };
-
-      fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      closeModal('laundry');
-    }
-
-    for (let h = 0; h < 24; h++) {
-      const opt = document.createElement('option');
-      opt.value = opt.textContent = String(h).padStart(2, '0');
-      document.getElementById('hourSelect').appendChild(opt);
-    }
-    for (let m = 0; m < 60; m += 5) {
-      const opt = document.createElement('option');
-      opt.value = opt.textContent = String(m).padStart(2, '0');
-      document.getElementById('minuteSelect').appendChild(opt);
-    }
-
-    window.onload = initializeLiff;
-  </script>
+  window.onload = initializeLiff;
+</script>
 </body>
 </html>
