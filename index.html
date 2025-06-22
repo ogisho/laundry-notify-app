@@ -240,15 +240,25 @@
       const res = await fetch(`${GAS_URL}?userId=${userId}`);
       const json = await res.json();
       console.log("fetchSettings response:", json);
-      if (!json.success) return;
-      const { notify, time, days, zipcode } = json.data;
 
+      if (!json.success || !json.data) {
+        console.warn("取得失敗 or データが空です");
+        return;
+      }
+
+      const notify = json.data.notify ?? "";
+      const time = json.data.time ?? "";
+      const days = json.data.days ?? "";
+      const zipcode = json.data.zipcode ?? "";
+
+      // 表示反映（空データも "--" にする）
       document.getElementById("toggleNotify").checked = notify === "on";
       document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
       document.getElementById("notifyTime").innerText = time || "--:--";
       document.getElementById("notifyDays").innerText = days || "--";
       document.getElementById("zipcode").innerText = zipcode || "--";
 
+      // モーダルへの初期値
       const [h, m] = (time || "00:00").split(":");
       document.getElementById("hourSelect").value = h;
       document.getElementById("minuteSelect").value = m;
@@ -259,8 +269,7 @@
         cb.checked = days.includes(cb.value);
       });
     } catch (e) {
-      console.error("fetchSettings エラー:", e);
-      alert("設定取得に失敗しました: " + e.message);
+      console.error("設定取得エラー:", e);
     }
   }
 
@@ -270,25 +279,27 @@
     const minute = document.getElementById("minuteSelect").value;
     const notifyTime = `${hour}:${minute}`;
 
+    const body = { userId, notifyEnabled, notifyTime };
+    console.log("saveNotifySettings POST:", body);
+
     try {
       const res = await fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, notifyEnabled, notifyTime })
+        body: JSON.stringify(body)
       });
+      const result = await res.json();
+      console.log("saveNotifySettings response:", result);
 
-      const json = await res.json();
-      console.log("saveNotifySettings response:", json);
-
-      if (json.success) {
+      if (!result.success) {
+        alert("保存に失敗しました");
+      } else {
         closeModal("notify");
         fetchSettings();
-      } else {
-        alert("エラー: " + (json.message || "保存に失敗しました"));
       }
     } catch (e) {
-      console.error("saveNotifySettings エラー:", e);
-      alert("通信エラーが発生しました: " + e.message);
+      console.error("保存エラー:", e);
+      alert("保存時にエラーが発生しました");
     }
   }
 
@@ -303,32 +314,34 @@
     const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked"))
       .map(cb => cb.value).join(",");
 
+    const body = { userId, zipcode, notifyDays };
+    console.log("saveLaundrySettings POST:", body);
+
     try {
       const res = await fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, zipcode, notifyDays })
+        body: JSON.stringify(body)
       });
+      const result = await res.json();
+      console.log("saveLaundrySettings response:", result);
 
-      const json = await res.json();
-      console.log("saveLaundrySettings response:", json);
-
-      if (json.success) {
+      if (!result.success) {
+        alert("保存に失敗しました");
+      } else {
         closeModal("laundry");
         fetchSettings();
-      } else {
-        alert("エラー: " + (json.message || "保存に失敗しました"));
       }
     } catch (e) {
-      console.error("saveLaundrySettings エラー:", e);
-      alert("通信エラーが発生しました: " + e.message);
+      console.error("保存エラー:", e);
+      alert("保存時にエラーが発生しました");
     }
   }
 
   window.onload = () => {
     populateTimeSelectors();
     initializeLiff();
-  };
+  }
 </script>
 </body>
 </html>
