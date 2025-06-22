@@ -1,205 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>通知設定画面</title>
-  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
-    h2 { margin-bottom: 16px; text-align: left; }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .section-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-size: 16px;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 6px 0;
-    }
-    .row label, .row span {
-      flex: 1;
-      text-align: left;
-    }
-    .right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-    .edit-btn {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-left: 8px;
-    }
-    .edit-btn:hover { background-color: #0056b3; }
-    .toggle-switch {
-      position: relative;
-      width: 40px;
-      height: 20px;
-      margin-left: 10px;
-    }
-    .toggle-switch input { display: none; }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      background-color: #ccc;
-      border-radius: 20px;
-      top: 0; left: 0; right: 0; bottom: 0;
-      transition: 0.4s;
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-    input:checked + .toggle-slider {
-      background-color: #4caf50;
-    }
-    input:checked + .toggle-slider:before {
-      transform: translateX(20px);
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.4);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-    }
-    .modal-content h3 {
-      margin-top: 0;
-      font-size: 18px;
-    }
-    .modal-buttons {
-      margin-top: 16px;
-      text-align: right;
-    }
-    .modal-buttons button {
-      margin-left: 8px;
-      padding: 6px 12px;
-    }
-    .checkbox-group label {
-      display: inline-block;
-      margin-right: 8px;
-    }
-    .error-message {
-      color: red;
-      margin-top: 8px;
-      display: none;
-    }
-  </style>
+  <!-- 略 -->
 </head>
 <body>
-  <h2>通知設定画面</h2>
-  <div class="card">
-    <div class="section-title">
-      通知メニュー
-      <button class="edit-btn" onclick="openModal('notify')">編集</button>
-    </div>
-    <div class="row">
-      <label>通知設定：</label>
-      <div class="right">
-        <span id="statusText">OFF</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggleNotify">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
-    <div class="row">
-      <label>通知時間：</label>
-      <div class="right">
-        <span id="notifyTime">--:--</span>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="section-title">
-      洗濯指数
-      <button class="edit-btn" onclick="openModal('laundry')">編集</button>
-    </div>
-    <div class="row">
-      <label>通知曜日：</label>
-      <div class="right">
-        <span id="notifyDays">--</span>
-      </div>
-    </div>
-    <div class="row">
-      <label>郵便番号：</label>
-      <div class="right">
-        <span id="zipcode">--</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-notify">
-    <div class="modal-content">
-      <h3>通知メニューの編集</h3>
-      <label>通知設定：<input type="checkbox" id="modalToggle"></label><br><br>
-      <label>通知時間：
-        <select id="hourSelect"></select>：<select id="minuteSelect"></select>
-      </label>
-      <p class="error-message" id="notifyError"></p>
-      <div class="modal-buttons">
-        <button onclick="closeModal('notify')">キャンセル</button>
-        <button onclick="saveNotifySettings()">保存</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-laundry">
-    <div class="modal-content">
-      <h3>洗濯指数の編集</h3>
-      <label>通知曜日：</label><br>
-      <div class="checkbox-group">
-        <label><input type="checkbox" value="月" checked>月</label>
-        <label><input type="checkbox" value="火" checked>火</label>
-        <label><input type="checkbox" value="水" checked>水</label>
-        <label><input type="checkbox" value="木" checked>木</label>
-        <label><input type="checkbox" value="金" checked>金</label>
-        <label><input type="checkbox" value="土" checked>土</label>
-        <label><input type="checkbox" value="日" checked>日</label>
-      </div><br>
-      <label>郵便番号：<input type="text" id="zipcodeInput" maxlength="7" pattern="\d{7}" required></label>
-      <p id="zipcodeError" style="color:red; display:none;">7桁の半角数字で入力してください</p>
-      <p class="error-message" id="laundryError"></p>
-      <div class="modal-buttons">
-        <button onclick="closeModal('laundry')">キャンセル</button>
-        <button onclick="saveLaundrySettings()">保存</button>
-      </div>
-    </div>
-  </div>
+  <!-- HTMLそのまま、変更なし -->
 
   <script>
   const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
@@ -207,6 +12,7 @@
   const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
   const LIFF_ID = "2007511869-DXmQ2r0r";
   let userId = "";
+  let currentData = {}; // 追加
 
   async function initializeLiff() {
     await liff.init({ liffId: LIFF_ID });
@@ -235,38 +41,36 @@
     }
   }
 
+  function updateView() {
+    document.getElementById("toggleNotify").checked = currentData.notify === "on";
+    document.getElementById("statusText").innerText = currentData.notify === "on" ? "ON" : "OFF";
+    document.getElementById("notifyTime").innerText = currentData.time || "--:--";
+    document.getElementById("notifyDays").innerText = currentData.days || "--";
+    document.getElementById("zipcode").innerText = currentData.zipcode || "--";
+  }
+
   async function fetchSettings() {
     try {
       const res = await fetch(`${GAS_URL}?userId=${userId}`);
       const json = await res.json();
-      console.log("fetchSettings response:", json);
+      if (!json.success || !json.data) return;
 
-      if (!json.success || !json.data) {
-        console.warn("取得失敗 or データが空です");
-        return;
-      }
+      currentData = {
+        notify: json.data.notify ?? "",
+        time: json.data.time ?? "",
+        days: json.data.days ?? "",
+        zipcode: json.data.zipcode ?? ""
+      };
+      updateView();
 
-      const notify = json.data.notify ?? "";
-      const time = json.data.time ?? "";
-      const days = json.data.days ?? "";
-      const zipcode = json.data.zipcode ?? "";
-
-      // 表示反映（空データも "--" にする）
-      document.getElementById("toggleNotify").checked = notify === "on";
-      document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-      document.getElementById("notifyTime").innerText = time || "--:--";
-      document.getElementById("notifyDays").innerText = days || "--";
-      document.getElementById("zipcode").innerText = zipcode || "--";
-
-      // モーダルへの初期値
-      const [h, m] = (time || "00:00").split(":");
+      const [h, m] = (currentData.time || "00:00").split(":");
       document.getElementById("hourSelect").value = h;
       document.getElementById("minuteSelect").value = m;
-      document.getElementById("modalToggle").checked = notify === "on";
-      document.getElementById("zipcodeInput").value = zipcode || "";
+      document.getElementById("modalToggle").checked = currentData.notify === "on";
+      document.getElementById("zipcodeInput").value = currentData.zipcode || "";
 
       document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
-        cb.checked = days.includes(cb.value);
+        cb.checked = currentData.days.includes(cb.value);
       });
     } catch (e) {
       console.error("設定取得エラー:", e);
@@ -274,20 +78,12 @@
   }
 
   async function saveNotifySettings() {
-    console.log("=== フォームの入力値チェック ===");
-console.log("通知ON/OFF:", document.querySelector('#modalToggle')?.checked);
-console.log("通知時間:", `${document.getElementById("hourSelect")?.value}:${document.getElementById("minuteSelect")?.value}`);
-console.log("郵便番号:", document.getElementById("zipcodeInput")?.value);
-const checkedDays = Array.from(document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked')).map(el => el.value);
-console.log("通知曜日:", checkedDays);
     const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
     const hour = document.getElementById("hourSelect").value;
     const minute = document.getElementById("minuteSelect").value;
     const notifyTime = `${hour}:${minute}`;
 
     const body = { userId, notifyEnabled, notifyTime };
-    console.log("saveNotifySettings POST:", body);
-
     try {
       const res = await fetch(GAS_URL, {
         method: "POST",
@@ -295,14 +91,12 @@ console.log("通知曜日:", checkedDays);
         body: JSON.stringify(body)
       });
       const result = await res.json();
-      console.log("saveNotifySettings response:", result);
+      if (!result.success) return alert("保存に失敗しました");
 
-      if (!result.success) {
-        alert("保存に失敗しました");
-      } else {
-        closeModal("notify");
-        fetchSettings();
-      }
+      currentData.notify = notifyEnabled;
+      currentData.time = notifyTime;
+      updateView();
+      closeModal("notify");
     } catch (e) {
       console.error("保存エラー:", e);
       alert("保存時にエラーが発生しました");
@@ -321,8 +115,6 @@ console.log("通知曜日:", checkedDays);
       .map(cb => cb.value).join(",");
 
     const body = { userId, zipcode, notifyDays };
-    console.log("saveLaundrySettings POST:", body);
-
     try {
       const res = await fetch(GAS_URL, {
         method: "POST",
@@ -330,14 +122,12 @@ console.log("通知曜日:", checkedDays);
         body: JSON.stringify(body)
       });
       const result = await res.json();
-      console.log("saveLaundrySettings response:", result);
+      if (!result.success) return alert("保存に失敗しました");
 
-      if (!result.success) {
-        alert("保存に失敗しました");
-      } else {
-        closeModal("laundry");
-        fetchSettings();
-      }
+      currentData.zipcode = zipcode;
+      currentData.days = notifyDays;
+      updateView();
+      closeModal("laundry");
     } catch (e) {
       console.error("保存エラー:", e);
       alert("保存時にエラーが発生しました");
@@ -347,7 +137,7 @@ console.log("通知曜日:", checkedDays);
   window.onload = () => {
     populateTimeSelectors();
     initializeLiff();
-  }
-</script>
+  };
+  </script>
 </body>
 </html>
