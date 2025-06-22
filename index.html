@@ -260,19 +260,34 @@
   }
 
   function saveNotifySettings() {
-    const enabled = document.getElementById('modalToggle').checked;
-    const hour = document.getElementById('hourSelect').value;
-    const minute = document.getElementById('minuteSelect').value;
-    const notifyTime = `${hour}:${minute}`;
+  const enabled = document.getElementById('modalToggle').checked;
+  const hour = document.getElementById('hourSelect').value;
+  const minute = document.getElementById('minuteSelect').value;
+  const notifyTime = `${hour}:${minute}`;
 
-    const checkedDays = [...document.querySelectorAll('.checkbox-group input:checked')].map(cb => cb.value).join('');
-    const zip = document.getElementById('zipcodeInput').value;
+  document.getElementById('statusText').textContent = enabled ? 'ON' : 'OFF';
+  document.getElementById('toggleNotify').checked = enabled;
+  document.getElementById('notifyTime').textContent = notifyTime;
 
-    const error = document.getElementById('zipcodeError');
-    if (!/^[0-9]{7}$/.test(zip)) {
-      error.style.display = 'block';
-      return;
-    }
+  const payload = { userId, notifyEnabled: enabled, notifyTime };
+
+  fetch(`${CORS_PROXY_URL}${GAS_BASE_URL}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        closeModal('notify');
+      } else {
+        alert("保存に失敗しました: " + data.message);
+      }
+    })
+    .catch(err => {
+      console.error('通知メニューの保存エラー:', err);
+      alert("保存時に通信エラーが発生しました");
+    });
+}
     error.style.display = 'none';
 
     document.getElementById('statusText').textContent = enabled ? 'ON' : 'OFF';
