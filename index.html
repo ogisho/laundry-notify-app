@@ -274,6 +274,12 @@
   }
 
   async function saveNotifySettings() {
+    console.log("=== フォームの入力値チェック ===");
+console.log("通知ON/OFF:", document.querySelector('#notify-toggle').checked);
+console.log("通知時間:", document.querySelector('#notify-time').value);
+console.log("郵便番号:", document.querySelector('#notify-zipcode').value);
+const checkedDays = Array.from(document.querySelectorAll('#notify-days input[type="checkbox"]:checked')).map(el => el.value);
+console.log("通知曜日:", checkedDays);
     const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
     const hour = document.getElementById("hourSelect").value;
     const minute = document.getElementById("minuteSelect").value;
