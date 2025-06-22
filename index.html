@@ -113,6 +113,11 @@
       display: inline-block;
       margin-right: 8px;
     }
+    .error-message {
+      color: red;
+      margin-top: 8px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -157,6 +162,7 @@
       </div>
     </div>
   </div>
+
   <div class="modal" id="modal-notify">
     <div class="modal-content">
       <h3>通知メニューの編集</h3>
@@ -164,12 +170,14 @@
       <label>通知時間：
         <select id="hourSelect"></select>：<select id="minuteSelect"></select>
       </label>
+      <p class="error-message" id="notifyError"></p>
       <div class="modal-buttons">
         <button onclick="closeModal('notify')">キャンセル</button>
         <button onclick="saveNotifySettings()">保存</button>
       </div>
     </div>
   </div>
+
   <div class="modal" id="modal-laundry">
     <div class="modal-content">
       <h3>洗濯指数の編集</h3>
@@ -185,12 +193,14 @@
       </div><br>
       <label>郵便番号：<input type="text" id="zipcodeInput" maxlength="7" pattern="\d{7}" required></label>
       <p id="zipcodeError" style="color:red; display:none;">7桁の半角数字で入力してください</p>
+      <p class="error-message" id="laundryError"></p>
       <div class="modal-buttons">
         <button onclick="closeModal('laundry')">キャンセル</button>
         <button onclick="saveLaundrySettings()">保存</button>
       </div>
     </div>
   </div>
+
   <script>
     const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
     const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbwnorPK5XIKdz1PyzVHcax82Q9bfgE44eYbCBhJO1aiVPVxnhmoAW8OirTGnhwtB979kw/exec";
@@ -212,6 +222,8 @@
 
     function closeModal(type) {
       document.getElementById(`modal-${type}`).style.display = "none";
+      if (type === "notify") document.getElementById("notifyError").style.display = "none";
+      if (type === "laundry") document.getElementById("laundryError").style.display = "none";
     }
 
     function populateTimeSelectors() {
@@ -258,11 +270,18 @@
       const minute = document.getElementById("minuteSelect").value;
       const notifyTime = `${hour}:${minute}`;
 
-      await fetch(GAS_URL, {
+      const res = await fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, notifyEnabled, notifyTime })
       });
+      const json = await res.json();
+
+      if (!json.success) {
+        document.getElementById("notifyError").innerText = json.message || "保存に失敗しました";
+        document.getElementById("notifyError").style.display = "block";
+        return;
+      }
       closeModal("notify");
       fetchSettings();
     }
@@ -277,11 +296,18 @@
       const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked"))
         .map(cb => cb.value).join(",");
 
-      await fetch(GAS_URL, {
+      const res = await fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, zipcode, notifyDays })
       });
+      const json = await res.json();
+
+      if (!json.success) {
+        document.getElementById("laundryError").innerText = json.message || "保存に失敗しました";
+        document.getElementById("laundryError").style.display = "block";
+        return;
+      }
       closeModal("laundry");
       fetchSettings();
     }
