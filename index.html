@@ -207,141 +207,136 @@
 
   <script>
   const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
-  const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbwtBVXzwgaiqL7596Pgg-5Mx0Na-nc1A_XdE8YYDZsyEMAv7h9T60226Rfg_eRyJYaTQQ/exec";
-  const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
-  const LIFF_ID = "2007511869-DXmQ2r0r";
-  let userId = "";
+const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbwtBVXzwgaiqL7596Pgg-5Mx0Na-nc1A_XdE8YYDZsyEMAv7h9T60226Rfg_eRyJYaTQQ/exec";
+const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
+const LIFF_ID = "2007511869-DXmQ2r0r";
+let userId = "";
 
-  async function initializeLiff() {
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) liff.login();
-    const profile = await liff.getProfile();
-    userId = profile.userId;
-    fetchSettings();
+async function initializeLiff() {
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) liff.login();
+  const profile = await liff.getProfile();
+  userId = profile.userId;
+  fetchSettings();
+}
+
+function openModal(type) {
+  document.getElementById(`modal-${type}`).style.display = "flex";
+}
+
+function closeModal(type) {
+  document.getElementById(`modal-${type}`).style.display = "none";
+}
+
+function populateTimeSelectors() {
+  const hourSelect = document.getElementById("hourSelect");
+  const minuteSelect = document.getElementById("minuteSelect");
+  for (let h = 0; h < 24; h++) {
+    hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
   }
-
-  function openModal(type) {
-    document.getElementById(`modal-${type}`).style.display = "flex";
+  for (let m = 0; m < 60; m += 5) {
+    minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
   }
+}
 
-  function closeModal(type) {
-    document.getElementById(`modal-${type}`).style.display = "none";
+async function fetchSettings() {
+  try {
+    const res = await fetch(`${GAS_URL}?userId=${userId}`);
+    const json = await res.json();
+    if (!json.success || !json.data) return;
+
+    let { notify, time, days, zipcode } = json.data;
+    time = time && time !== "" ? time : "未登録";
+    days = days && days !== "" ? days : "未登録";
+    zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
+
+    document.getElementById("toggleNotify").checked = notify === "on";
+    document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
+    document.getElementById("notifyTime").innerText = time;
+    document.getElementById("notifyDays").innerText = days;
+    document.getElementById("zipcode").innerText = zipcode;
+
+    const [h, m] = (time !== "未登録" ? time : "00:00").split(":");
+    document.getElementById("hourSelect").value = h;
+    document.getElementById("minuteSelect").value = m;
+    document.getElementById("modalToggle").checked = notify === "on";
+    document.getElementById("zipcodeInput").value = zipcode !== "未登録" ? zipcode : "";
+
+    document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
+      cb.checked = typeof days === "string" && days !== "未登録" && days.includes(cb.value);
+    });
+  } catch (e) {
+    console.error("設定取得エラー:", e);
   }
+}
 
-  function populateTimeSelectors() {
-    const hourSelect = document.getElementById("hourSelect");
-    const minuteSelect = document.getElementById("minuteSelect");
-    for (let h = 0; h < 24; h++) {
-      hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
+async function saveNotifySettings() {
+  const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
+  const hour = document.getElementById("hourSelect").value;
+  const minute = document.getElementById("minuteSelect").value;
+  const notifyTime = `${hour}:${minute}`;
+
+  const body = { userId, notifyEnabled, notifyTime };
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const result = await res.json();
+    console.log("🔁 saveNotifySettings() result:", result);
+    if (result.success) {
+      closeModal("notify");
+      console.log("📥 calling fetchSettings() after notify save");
+      fetchSettings();
+    } else {
+      alert("通知設定の保存に失敗しました");
     }
-    for (let m = 0; m < 60; m += 5) {
-      minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
-    }
+  } catch (e) {
+    console.error("通知保存エラー:", e);
+    alert("通知設定の保存時にエラーが発生しました");
   }
+}
 
-  async function fetchSettings() {
-    try {
-      const res = await fetch(`${GAS_URL}?userId=${userId}`);
-      const json = await res.json();
-      if (!json.success || !json.data) return;
+async function saveLaundrySettings() {
+  const zipcode = document.getElementById("zipcodeInput").value;
+  const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked"))
+    .map(cb => cb.value).join(",");
 
-      let { notify, time, days, zipcode } = json.data;
-      time = time && time !== "" ? time : "未登録";
-      days = days && days !== "" ? days : "未登録";
-      zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
-
-      document.getElementById("toggleNotify").checked = notify === "on";
-      document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-      document.getElementById("notifyTime").innerText = time;
-      document.getElementById("notifyDays").innerText = days;
-      document.getElementById("zipcode").innerText = zipcode;
-
-      const [h, m] = (time !== "未登録" ? time : "00:00").split(":");
-      document.getElementById("hourSelect").value = h;
-      document.getElementById("minuteSelect").value = m;
-      document.getElementById("modalToggle").checked = notify === "on";
-      document.getElementById("zipcodeInput").value = zipcode !== "未登録" ? zipcode : "";
-
-      document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
-        cb.checked = typeof days === "string" && days !== "未登録" && days.includes(cb.value);
-      });
-    } catch (e) {
-      console.error("設定取得エラー:", e);
-    }
+  if (!/^\d{7}$/.test(zipcode)) {
+    document.getElementById("zipcodeError").style.display = "block";
+    return;
   }
+  document.getElementById("zipcodeError").style.display = "none";
 
-  // 通知メニュー保存
-  async function saveNotifySettings() {
-    const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
-    const hour = document.getElementById("hourSelect").value;
-    const minute = document.getElementById("minuteSelect").value;
-    const notifyTime = `${hour}:${minute}`;
+  const body = { userId, zipcode, notifyDays };
 
-    const body = {
-      userId,
-      notifyEnabled,
-      notifyTime
-    };
-
-    try {
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const result = await res.json();
-      if (result.success) {
-        closeModal("notify");
-        fetchSettings();
-      } else {
-        alert("通知設定の保存に失敗しました");
-      }
-    } catch (e) {
-      console.error("通知保存エラー:", e);
-      alert("通知設定の保存時にエラーが発生しました");
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const result = await res.json();
+    console.log("🔁 saveLaundrySettings() result:", result);
+    if (result.success) {
+      closeModal("laundry");
+      console.log("📥 calling fetchSettings() after laundry save");
+      fetchSettings();
+    } else {
+      alert("洗濯指数の保存に失敗しました");
     }
+  } catch (e) {
+    console.error("洗濯保存エラー:", e);
+    alert("洗濯指数の保存時にエラーが発生しました");
   }
+}
 
-  // 洗濯指数保存
-  async function saveLaundrySettings() {
-    const zipcode = document.getElementById("zipcodeInput").value;
-    const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked")).map(cb => cb.value).join(",");
-
-    if (!/^\d{7}$/.test(zipcode)) {
-      document.getElementById("zipcodeError").style.display = "block";
-      return;
-    }
-    document.getElementById("zipcodeError").style.display = "none";
-
-    const body = {
-      userId,
-      zipcode,
-      notifyDays
-    };
-
-    try {
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const result = await res.json();
-      if (result.success) {
-        closeModal("laundry");
-        fetchSettings();
-      } else {
-        alert("洗濯指数の保存に失敗しました");
-      }
-    } catch (e) {
-      console.error("洗濯保存エラー:", e);
-      alert("洗濯指数の保存時にエラーが発生しました");
-    }
-  }
-
-  window.onload = () => {
-    populateTimeSelectors();
-    initializeLiff();
-  };
+window.onload = () => {
+  populateTimeSelectors();
+  initializeLiff();
+};
 </script>
 </body>
 </html>
