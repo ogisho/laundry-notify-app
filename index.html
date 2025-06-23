@@ -6,6 +6,7 @@
   <title>通知設定画面</title>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <style>
+    /* === スタイルは省略なし、前回と完全同一 === */
     body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
     h2 { margin-bottom: 16px; text-align: left; }
     .card {
@@ -121,7 +122,7 @@
   </style>
 </head>
 <body>
-  <h2>通知設定画面</h2>
+    <h2>通知設定画面</h2>
   <div class="card">
     <div class="section-title">
       通知メニュー
@@ -144,6 +145,7 @@
       </div>
     </div>
   </div>
+
   <div class="card">
     <div class="section-title">
       洗濯指数
@@ -163,6 +165,7 @@
     </div>
   </div>
 
+  <!-- 通知メニュー モーダル -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
       <h3>通知メニューの編集</h3>
@@ -173,11 +176,12 @@
       <p class="error-message" id="notifyError"></p>
       <div class="modal-buttons">
         <button onclick="closeModal('notify')">キャンセル</button>
-        <button onclick="saveNotifySettings()">保存</button>
+        <button onclick="saveLaundrySettings()">保存</button>
       </div>
     </div>
   </div>
 
+  <!-- 洗濯指数 モーダル -->
   <div class="modal" id="modal-laundry">
     <div class="modal-content">
       <h3>洗濯指数の編集</h3>
@@ -202,137 +206,116 @@
   </div>
 
   <script>
-  const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
-  const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbwbpZ73resfjGUeA8A5Wy1uoWZhBWQwZX5hdqLp_UVZCQIacM44rvQfczeaqYrZ9oXQxQ/exec";
-  const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
-  const LIFF_ID = "2007511869-DXmQ2r0r";
-  let userId = "";
+    const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
+    const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbwbpZ73resfjGUeA8A5Wy1uoWZhBWQwZX5hdqLp_UVZCQIacM44rvQfczeaqYrZ9oXQxQ/exec";
+    const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
+    const LIFF_ID = "2007511869-DXmQ2r0r";
+    let userId = "";
 
-  async function initializeLiff() {
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) liff.login();
-    const profile = await liff.getProfile();
-    userId = profile.userId;
-    fetchSettings();
-  }
-
-  function openModal(type) {
-    document.getElementById(`modal-${type}`).style.display = "flex";
-  }
-
-  function closeModal(type) {
-    document.getElementById(`modal-${type}`).style.display = "none";
-  }
-
-  function populateTimeSelectors() {
-    const hourSelect = document.getElementById("hourSelect");
-    const minuteSelect = document.getElementById("minuteSelect");
-    if (!hourSelect || !minuteSelect) return;
-    for (let h = 0; h < 24; h++) {
-      hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
+    async function initializeLiff() {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) liff.login();
+      const profile = await liff.getProfile();
+      userId = profile.userId;
+      fetchSettings();
     }
-    for (let m = 0; m < 60; m += 5) {
-      minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
+
+    function openModal(type) {
+      document.getElementById(`modal-${type}`).style.display = "flex";
     }
-  }
 
-  async function fetchSettings() {
-    try {
-      const res = await fetch(`${GAS_URL}?userId=${userId}`);
-      const json = await res.json();
-      console.log("fetchSettings response:", json);
-
-      if (!json.success || !json.data) return;
-
-      let { notify, time, days, zipcode } = json.data;
-
-      // sanitize empty or null values
-      time = time && time !== "" ? time : "未登録";
-      days = days && days !== "" ? days : "未登録";
-      zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
-
-      document.getElementById("toggleNotify").checked = notify === "on";
-      document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-      document.getElementById("notifyTime").innerText = time !== "未登録" ? time : "未登録";
-      document.getElementById("notifyDays").innerText = days !== "未登録" ? days : "未登録";
-      document.getElementById("zipcode").innerText = zipcode !== "未登録" ? zipcode : "未登録";
-
-      const [h, m] = (time !== "未登録" ? time : "00:00").split(":");
-      document.getElementById("hourSelect").value = h;
-      document.getElementById("minuteSelect").value = m;
-      document.getElementById("modalToggle").checked = notify === "on";
-      document.getElementById("zipcodeInput").value = zipcode !== "未登録" ? zipcode : "";
-
-      document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
-        cb.checked = typeof days === "string" && days !== "未登録" && days.includes(cb.value);
-      });
-    } catch (e) {
-      console.error("設定取得エラー:", e);
+    function closeModal(type) {
+      document.getElementById(`modal-${type}`).style.display = "none";
     }
-  }
 
-  async function saveNotifySettings() {
-    const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
-    const hour = document.getElementById("hourSelect").value;
-    const minute = document.getElementById("minuteSelect").value;
-    const notifyTime = `${hour}:${minute}`;
-
-    const body = { userId, notifyEnabled, notifyTime };
-    console.log("saveNotifySettings POST:", body);
-
-    try {
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const result = await res.json();
-      if (result.success) {
-        closeModal("notify");
-        fetchSettings();
-      } else {
-        alert("保存に失敗しました");
+    function populateTimeSelectors() {
+      const hourSelect = document.getElementById("hourSelect");
+      const minuteSelect = document.getElementById("minuteSelect");
+      for (let h = 0; h < 24; h++) {
+        hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
       }
-    } catch (e) {
-      console.error("保存エラー:", e);
-      alert("保存時にエラーが発生しました");
-    }
-  }
-
-  async function saveLaundrySettings() {
-    const zipcode = document.getElementById("zipcodeInput").value;
-    if (!/^\d{7}$/.test(zipcode)) {
-      document.getElementById("zipcodeError").style.display = "block";
-      return;
-    }
-    document.getElementById("zipcodeError").style.display = "none";
-    const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked")).map(cb => cb.value).join(",");
-    const body = { userId, zipcode, notifyDays };
-    console.log("saveLaundrySettings POST:", body);
-
-    try {
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const result = await res.json();
-      if (result.success) {
-        closeModal("laundry");
-        fetchSettings();
-      } else {
-        alert("保存に失敗しました");
+      for (let m = 0; m < 60; m += 5) {
+        minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
       }
-    } catch (e) {
-      console.error("保存エラー:", e);
-      alert("保存時にエラーが発生しました");
     }
-  }
 
-  window.onload = () => {
-    populateTimeSelectors();
-    initializeLiff();
-  }
-</script>
+    async function fetchSettings() {
+      try {
+        const res = await fetch(`${GAS_URL}?userId=${userId}`);
+        const json = await res.json();
+        if (!json.success || !json.data) return;
+
+        let { notify, time, days, zipcode } = json.data;
+        time = time && time !== "" ? time : "未登録";
+        days = days && days !== "" ? days : "未登録";
+        zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
+
+        document.getElementById("toggleNotify").checked = notify === "on";
+        document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
+        document.getElementById("notifyTime").innerText = time;
+        document.getElementById("notifyDays").innerText = days;
+        document.getElementById("zipcode").innerText = zipcode;
+
+        const [h, m] = (time !== "未登録" ? time : "00:00").split(":");
+        document.getElementById("hourSelect").value = h;
+        document.getElementById("minuteSelect").value = m;
+        document.getElementById("modalToggle").checked = notify === "on";
+        document.getElementById("zipcodeInput").value = zipcode !== "未登録" ? zipcode : "";
+
+        document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
+          cb.checked = typeof days === "string" && days !== "未登録" && days.includes(cb.value);
+        });
+      } catch (e) {
+        console.error("設定取得エラー:", e);
+      }
+    }
+
+    async function saveLaundrySettings() {
+      const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
+      const hour = document.getElementById("hourSelect").value;
+      const minute = document.getElementById("minuteSelect").value;
+      const notifyTime = `${hour}:${minute}`;
+      const zipcode = document.getElementById("zipcodeInput").value;
+      const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked")).map(cb => cb.value).join(",");
+
+      if (!/^\d{7}$/.test(zipcode)) {
+        document.getElementById("zipcodeError").style.display = "block";
+        return;
+      }
+      document.getElementById("zipcodeError").style.display = "none";
+
+      const body = {
+        userId,
+        notifyEnabled,
+        notifyTime,
+        zipcode,
+        notifyDays
+      };
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await res.json();
+        if (result.success) {
+          closeModal("notify");
+          closeModal("laundry");
+          fetchSettings();
+        } else {
+          alert("保存に失敗しました");
+        }
+      } catch (e) {
+        console.error("保存時エラー:", e);
+        alert("保存時にエラーが発生しました");
+      }
+    }
+
+    window.onload = () => {
+      populateTimeSelectors();
+      initializeLiff();
+    };
+  </script>
 </body>
 </html>
