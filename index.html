@@ -206,8 +206,8 @@
   </div>
 
   <script>
-  const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
-const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbx3OltcHvIayNbtFN5ot8YEco7e32kH4O-x1MJl9lyLP22XBC-0iYiJ6amZuJue7hzvEw/exec";
+const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
+const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbw2SpfcDqXRJdMnXJ-L50DLfj86OBl8NI2HSzirMHdqH6ahwOEYQ2MyEbSWuhm-Ds78/exec";
 const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
@@ -245,25 +245,22 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success || !json.data) return;
 
-    let { notify, time, days, zipcode } = json.data;
-    time = time && time !== "" ? time : "未登録";
-    days = days && days !== "" ? days : "未登録";
-    zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
+    const { notify, time, days, zipcode } = json.data;
 
     document.getElementById("toggleNotify").checked = notify === "on";
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-    document.getElementById("notifyTime").innerText = time;
-    document.getElementById("notifyDays").innerText = days;
-    document.getElementById("zipcode").innerText = zipcode;
+    document.getElementById("notifyTime").innerText = time || "未登録";
+    document.getElementById("notifyDays").innerText = days || "未登録";
+    document.getElementById("zipcode").innerText = zipcode || "未登録";
 
-    const [h, m] = (time !== "未登録" ? time : "00:00").split(":");
+    const [h, m] = (time || "00:00").split(":");
     document.getElementById("hourSelect").value = h;
     document.getElementById("minuteSelect").value = m;
     document.getElementById("modalToggle").checked = notify === "on";
-    document.getElementById("zipcodeInput").value = zipcode !== "未登録" ? zipcode : "";
+    document.getElementById("zipcodeInput").value = zipcode || "";
 
     document.querySelectorAll(".checkbox-group input[type=checkbox]").forEach(cb => {
-      cb.checked = typeof days === "string" && days !== "未登録" && days.includes(cb.value);
+      cb.checked = days && days.includes(cb.value);
     });
   } catch (e) {
     console.error("設定取得エラー:", e);
@@ -276,7 +273,12 @@ async function saveNotifySettings() {
   const minute = document.getElementById("minuteSelect").value;
   const notifyTime = `${hour}:${minute}`;
 
-  const body = { userId, notifyEnabled, notifyTime };
+  const body = {
+    userId,
+    notifyEnabled,
+    notifyTime,
+    mode: "notify" // ← GAS側でモード別に処理するため
+  };
 
   try {
     const res = await fetch(GAS_URL, {
@@ -285,10 +287,8 @@ async function saveNotifySettings() {
       body: JSON.stringify(body)
     });
     const result = await res.json();
-    console.log("🔁 saveNotifySettings() result:", result);
     if (result.success) {
       closeModal("notify");
-      console.log("📥 calling fetchSettings() after notify save");
       fetchSettings();
     } else {
       alert("通知設定の保存に失敗しました");
@@ -310,7 +310,12 @@ async function saveLaundrySettings() {
   }
   document.getElementById("zipcodeError").style.display = "none";
 
-  const body = { userId, zipcode, notifyDays };
+  const body = {
+    userId,
+    notifyDays,
+    zipcode,
+    mode: "laundry" // ← GAS側でモード別に処理するため
+  };
 
   try {
     const res = await fetch(GAS_URL, {
@@ -319,10 +324,8 @@ async function saveLaundrySettings() {
       body: JSON.stringify(body)
     });
     const result = await res.json();
-    console.log("🔁 saveLaundrySettings() result:", result);
     if (result.success) {
       closeModal("laundry");
-      console.log("📥 calling fetchSettings() after laundry save");
       fetchSettings();
     } else {
       alert("洗濯指数の保存に失敗しました");
