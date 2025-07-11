@@ -241,11 +241,21 @@ async function saveLaundrySettings() {
 async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
-  const umbrellaZipcodes = [];
-  for (let i = 1; i <= 5; i++) {
-    umbrellaZipcodes.push(document.getElementById(`umbrellaZipInput${i}`).value.trim());
-  }
-  const body = { userId, umbrellaDays, umbrellaZipcodes };
+  const umbrellaZip1 = document.getElementById("umbrellaZipInput1").value.trim();
+  const umbrellaZip2 = document.getElementById("umbrellaZipInput2").value.trim();
+  const umbrellaZip3 = document.getElementById("umbrellaZipInput3").value.trim();
+  const umbrellaZip4 = document.getElementById("umbrellaZipInput4").value.trim();
+  const umbrellaZip5 = document.getElementById("umbrellaZipInput5").value.trim();
+
+  const body = {
+    userId,
+    umbrellaDays,
+    umbrellaZip1,
+    umbrellaZip2,
+    umbrellaZip3,
+    umbrellaZip4,
+    umbrellaZip5
+  };
   await postSettings(body, document.getElementById("umbrellaSaveStatus"), "umbrella");
 }
 
