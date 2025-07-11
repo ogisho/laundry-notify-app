@@ -165,11 +165,13 @@ async function initializeLiff() {
 
 // === セクション: モーダル制御 ===
 function openModal(type) {
-  document.getElementById(`modal-${type}`).style.display = "flex";
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.style.display = "flex";
 }
 
 function closeModal(type) {
-  document.getElementById(`modal-${type}`).style.display = "none";
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.style.display = "none";
 }
 
 // === セクション: 設定取得 ===
@@ -187,37 +189,41 @@ async function fetchSettings() {
     document.getElementById("zipcode").innerText = zipcode || "--";
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
     document.getElementById("umbrellaZip1").innerText = umbrellaZip || "--";
+
+    // 保存中メッセージ初期化
+    document.querySelectorAll('.save-status').forEach(el => el.innerText = "");
+
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
 }
 
-// === セクション: 保存処理（通知メニュー） ===
+// === セクション: 保存処理 ===
 async function saveNotifySettings() {
   const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
   const hour = document.getElementById("hourSelect").value;
   const minute = document.getElementById("minuteSelect").value;
-  await postSettings({ userId, notifyEnabled, notifyTime: `${hour}:${minute}` });
+  await postSettings({ userId, notifyEnabled, notifyTime: `${hour}:${minute}` }, "notifySaveStatus");
 }
 
-// === セクション: 保存処理（洗濯指数） ===
 async function saveLaundrySettings() {
   const zipcode = document.getElementById("zipcodeInput").value;
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
-  await postSettings({ userId, zipcode, notifyDays });
+  await postSettings({ userId, zipcode, notifyDays }, "laundrySaveStatus");
 }
 
-// === セクション: 保存処理（傘通知） ===
 async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   const umbrellaZip = document.getElementById("umbrellaZipInput1").value.trim();
-  await postSettings({ userId, umbrellaDays, umbrellaZip });
+  await postSettings({ userId, umbrellaDays, umbrellaZip }, "umbrellaSaveStatus");
 }
 
 // === セクション: POST送信共通処理 ===
-async function postSettings(body) {
+async function postSettings(body, statusId) {
+  const statusElem = document.getElementById(statusId);
+  statusElem.innerText = "保存中...";
   try {
     const res = await fetch(PROXY_URL, {
       method: "POST",
@@ -226,12 +232,18 @@ async function postSettings(body) {
     });
     const result = await res.json();
     if (result.success) {
+      statusElem.innerText = "保存完了！";
       await fetchSettings();
+      setTimeout(() => {
+        statusElem.innerText = "";
+        closeModal(statusId.replace("SaveStatus", ""));
+      }, 1500);
     } else {
-      console.error("保存失敗:", result.message);
+      statusElem.innerText = "保存失敗";
     }
   } catch (e) {
     console.error("保存エラー:", e);
+    statusElem.innerText = "保存失敗";
   }
 }
 
