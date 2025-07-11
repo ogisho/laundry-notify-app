@@ -159,9 +159,17 @@ async function initializeLiff() {
   } catch (e) {
     console.error("LIFF初期化エラー:", e);
   } finally {
-    // 読み込み後、loadingを必ず非表示にする
     document.getElementById('loading').style.display = 'none';
   }
+}
+
+// === セクション: モーダル制御 ===
+function openModal(type) {
+  document.getElementById(`modal-${type}`).style.display = "flex";
+}
+
+function closeModal(type) {
+  document.getElementById(`modal-${type}`).style.display = "none";
 }
 
 // === セクション: 設定取得 ===
