@@ -155,7 +155,6 @@ async function initializeLiff() {
   if (!liff.isLoggedIn()) liff.login();
   const profile = await liff.getProfile();
   userId = profile.userId;
-  console.log("LIFF取得 userId:", userId);
 
   await fetchSettings();
 
@@ -199,12 +198,13 @@ async function fetchSettings() {
     document.getElementById("zipcode").innerText = zipcode || "--";
 
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
-
-    const zipArray = Array.isArray(umbrellaZipcodes) ? umbrellaZipcodes : [];
-    for (let i = 0; i < 5; i++) {
-      const zipValue = zipArray[i] || "--";
-      document.getElementById(`umbrellaZip${i + 1}`).innerText = zipValue;
-      document.getElementById(`umbrellaZipInput${i + 1}`).value = zipValue === "--" ? "" : zipValue;
+    if (Array.isArray(umbrellaZipcodes)) {
+      umbrellaZipcodes.forEach((zip, i) => {
+        const elem = document.getElementById(`umbrellaZip${i + 1}`);
+        if (elem) elem.innerText = zip || "--";
+      });
+    } else {
+      console.warn("umbrellaZipcodes is not an array", umbrellaZipcodes);
     }
 
     const [h, m] = (time || "00:00").split(":");
@@ -218,7 +218,10 @@ async function fetchSettings() {
     document.querySelectorAll("#modal-umbrella .checkbox-group input").forEach(cb => {
       cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
     });
-
+    for (let i = 1; i <= 5; i++) {
+      const input = document.getElementById(`umbrellaZipInput${i}`);
+      if (input) input.value = umbrellaZipcodes && umbrellaZipcodes[i - 1] || "";
+    }
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
@@ -230,7 +233,6 @@ async function saveNotifySettings() {
   const minute = document.getElementById("minuteSelect").value;
   const notifyTime = `${hour}:${minute}`;
   const body = { userId, notifyEnabled, notifyTime };
-  console.log("POST body (notify):", body);
   await postSettings(body, document.getElementById("notifySaveStatus"), "notify");
 }
 
@@ -239,7 +241,6 @@ async function saveLaundrySettings() {
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   const body = { userId, zipcode, notifyDays };
-  console.log("POST body (laundry):", body);
   await postSettings(body, document.getElementById("laundrySaveStatus"), "laundry");
 }
 
@@ -261,7 +262,6 @@ async function saveUmbrellaSettings() {
     umbrellaZip4,
     umbrellaZip5
   };
-  console.log("POST body (umbrella):", body);
   await postSettings(body, document.getElementById("umbrellaSaveStatus"), "umbrella");
 }
 
@@ -273,8 +273,6 @@ async function postSettings(body, statusElem, modalType) {
       body: JSON.stringify(body)
     });
     const result = await res.json();
-    console.log("保存結果:", result);
-
     if (result.success) {
       statusElem.innerText = "保存完了！";
       fetchSettings();
