@@ -190,37 +190,40 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success) return;
 
-    const { notify, time, days, zipcode, umbrellaDays, umbrellaZipcodes } = json.data;
+    const {
+      notify = "off",
+      time = "--:--",
+      days = "--",
+      zipcode = "--",
+      umbrellaDays = "--",
+      umbrellaZipcodes = []
+    } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-    document.getElementById("notifyTime").innerText = time || "--:--";
-    document.getElementById("notifyDays").innerText = days || "--";
-    document.getElementById("zipcode").innerText = zipcode || "--";
+    document.getElementById("notifyTime").innerText = time;
+    document.getElementById("notifyDays").innerText = days;
+    document.getElementById("zipcode").innerText = zipcode;
+    document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays;
 
-    document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
-    if (Array.isArray(umbrellaZipcodes)) {
-      umbrellaZipcodes.forEach((zip, i) => {
-        const elem = document.getElementById(`umbrellaZip${i + 1}`);
-        if (elem) elem.innerText = zip || "--";
-      });
-    } else {
-      console.warn("umbrellaZipcodes is not an array", umbrellaZipcodes);
+    const safeUmbrellaZipcodes = Array.isArray(umbrellaZipcodes) ? umbrellaZipcodes : [];
+    for (let i = 0; i < 5; i++) {
+      const zip = safeUmbrellaZipcodes[i] || "--";
+      document.getElementById(`umbrellaZip${i + 1}`).innerText = zip;
     }
 
-    const [h, m] = (time || "00:00").split(":");
-    document.getElementById("hourSelect").value = h;
-    document.getElementById("minuteSelect").value = m;
+    const [h, m] = time.split(":");
+    document.getElementById("hourSelect").value = h || "00";
+    document.getElementById("minuteSelect").value = m || "00";
     document.getElementById("modalToggle").checked = notify === "on";
     document.getElementById("zipcodeInput").value = zipcode || "";
     document.querySelectorAll("#modal-laundry .checkbox-group input").forEach(cb => {
-      cb.checked = days && days.includes(cb.value);
+      cb.checked = days.includes(cb.value);
     });
     document.querySelectorAll("#modal-umbrella .checkbox-group input").forEach(cb => {
-      cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
+      cb.checked = umbrellaDays.includes(cb.value);
     });
     for (let i = 1; i <= 5; i++) {
-      const input = document.getElementById(`umbrellaZipInput${i}`);
-      if (input) input.value = umbrellaZipcodes && umbrellaZipcodes[i - 1] || "";
+      document.getElementById(`umbrellaZipInput${i}`).value = safeUmbrellaZipcodes[i - 1] || "";
     }
   } catch (e) {
     console.error("設定取得エラー:", e);
@@ -269,7 +272,8 @@ async function postSettings(body, statusElem, modalType) {
   statusElem.innerText = "保存中…";
   try {
     const res = await fetch(PROXY_URL, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
     const result = await res.json();
