@@ -188,6 +188,9 @@ async function initializeLiff() {
 }
 
 function openModal(type) {
+  if (type === 'notify') {
+    populateTimeSelectors();  // モーダルを開くたびに時間選択肢を生成
+  }
   document.getElementById(`modal-${type}`).style.display = "flex";
 }
 
@@ -198,6 +201,8 @@ function closeModal(type) {
 function populateTimeSelectors() {
   const hourSelect = document.getElementById("hourSelect");
   const minuteSelect = document.getElementById("minuteSelect");
+  hourSelect.innerHTML = "";  // 既存の選択肢をクリア
+  minuteSelect.innerHTML = "";
   for (let h = 0; h < 24; h++) {
     hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
   }
@@ -245,6 +250,10 @@ async function fetchSettings() {
     console.error("設定取得エラー:", e);
   }
 }
+
+window.onload = () => {
+  initializeLiff();
+};
 </script>
 </body>
 </html>
