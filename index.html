@@ -118,6 +118,10 @@
       margin-top: 8px;
       display: none;
     }
+    .save-status {
+      color: green;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -173,6 +177,7 @@
         <select id="hourSelect"></select>：<select id="minuteSelect"></select>
       </label>
       <p class="error-message" id="notifyError"></p>
+      <p class="save-status" id="notifySaveStatus"></p>
       <div class="modal-buttons">
         <button onclick="closeModal('notify')">キャンセル</button>
         <button onclick="saveNotifySettings()">保存</button>
@@ -197,6 +202,7 @@
       <label>郵便番号：<input type="text" id="zipcodeInput" maxlength="7" pattern="\d{7}" required></label>
       <p id="zipcodeError" style="color:red; display:none;">7桁の半角数字で入力してください</p>
       <p class="error-message" id="laundryError"></p>
+      <p class="save-status" id="laundrySaveStatus"></p>
       <div class="modal-buttons">
         <button onclick="closeModal('laundry')">キャンセル</button>
         <button onclick="saveLaundrySettings()">保存</button>
@@ -268,6 +274,9 @@ async function fetchSettings() {
 }
 
 async function saveNotifySettings() {
+  const statusElem = document.getElementById("notifySaveStatus");
+  statusElem.innerText = "保存中…";
+
   const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
   const hour = document.getElementById("hourSelect").value;
   const minute = document.getElementById("minuteSelect").value;
@@ -282,28 +291,36 @@ async function saveNotifySettings() {
       body: JSON.stringify(body)
     });
     const result = await res.json();
-    console.log("🔁 saveNotifySettings() result:", result);
     if (result.success) {
       document.getElementById("statusText").innerText = notifyEnabled === "on" ? "ON" : "OFF";
       document.getElementById("toggleNotify").checked = notifyEnabled === "on";
       document.getElementById("notifyTime").innerText = notifyTime;
-      closeModal("notify");
+      statusElem.innerText = "保存完了！";
+      setTimeout(() => { statusElem.innerText = ""; closeModal("notify"); }, 1500);
     } else {
+      statusElem.innerText = "保存失敗";
+      setTimeout(() => { statusElem.innerText = ""; }, 2000);
       alert("通知設定の保存に失敗しました");
     }
   } catch (e) {
     console.error("通知保存エラー:", e);
+    statusElem.innerText = "保存失敗";
+    setTimeout(() => { statusElem.innerText = ""; }, 2000);
     alert("通知設定の保存時にエラーが発生しました");
   }
 }
 
 async function saveLaundrySettings() {
+  const statusElem = document.getElementById("laundrySaveStatus");
+  statusElem.innerText = "保存中…";
+
   const zipcode = document.getElementById("zipcodeInput").value;
   const notifyDays = Array.from(document.querySelectorAll(".checkbox-group input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
 
   if (!/^\d{7}$/.test(zipcode)) {
     document.getElementById("zipcodeError").style.display = "block";
+    statusElem.innerText = "";
     return;
   }
   document.getElementById("zipcodeError").style.display = "none";
@@ -317,16 +334,20 @@ async function saveLaundrySettings() {
       body: JSON.stringify(body)
     });
     const result = await res.json();
-    console.log("🔁 saveLaundrySettings() result:", result);
     if (result.success) {
       document.getElementById("zipcode").innerText = zipcode;
       document.getElementById("notifyDays").innerText = notifyDays;
-      closeModal("laundry");
+      statusElem.innerText = "保存完了！";
+      setTimeout(() => { statusElem.innerText = ""; closeModal("laundry"); }, 1500);
     } else {
+      statusElem.innerText = "保存失敗";
+      setTimeout(() => { statusElem.innerText = ""; }, 2000);
       alert("洗濯指数の保存に失敗しました");
     }
   } catch (e) {
     console.error("洗濯保存エラー:", e);
+    statusElem.innerText = "保存失敗";
+    setTimeout(() => { statusElem.innerText = ""; }, 2000);
     alert("洗濯指数の保存時にエラーが発生しました");
   }
 }
