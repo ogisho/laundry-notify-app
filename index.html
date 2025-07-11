@@ -49,38 +49,6 @@
       margin-left: 8px;
     }
     .edit-btn:hover { background-color: #0056b3; }
-    .toggle-switch {
-      position: relative;
-      width: 40px;
-      height: 20px;
-      margin-left: 10px;
-    }
-    .toggle-switch input { display: none; }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      background-color: #ccc;
-      border-radius: 20px;
-      top: 0; left: 0; right: 0; bottom: 0;
-      transition: 0.4s;
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-    input:checked + .toggle-slider {
-      background-color: #4caf50;
-    }
-    input:checked + .toggle-slider:before {
-      transform: translateX(20px);
-    }
     .modal {
       display: none;
       position: fixed;
@@ -131,12 +99,11 @@
       通知メニュー
       <button class="edit-btn" onclick="openModal('notify')">編集</button>
     </div>
-<div class="row">
-  <label>通知設定：</label>
-  <div class="right">
-    <span id="statusText">OFF</span>
-  </div>
-</div>
+    <div class="row">
+      <label>通知設定：</label>
+      <div class="right">
+        <span id="statusText">OFF</span>
+      </div>
     </div>
     <div class="row">
       <label>通知時間：</label>
@@ -250,7 +217,6 @@ async function fetchSettings() {
     days = days && days !== "" ? days : "未登録";
     zipcode = zipcode && zipcode !== "" ? zipcode : "未登録";
 
-    document.getElementById("toggleNotify").checked = notify === "on";
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = time;
     document.getElementById("notifyDays").innerText = days;
@@ -290,7 +256,6 @@ async function saveNotifySettings() {
     const result = await res.json();
     if (result.success) {
       document.getElementById("statusText").innerText = notifyEnabled === "on" ? "ON" : "OFF";
-      document.getElementById("toggleNotify").checked = notifyEnabled === "on";
       document.getElementById("notifyTime").innerText = notifyTime;
       statusElem.innerText = "保存完了！";
       setTimeout(() => { statusElem.innerText = ""; closeModal("notify"); }, 1500);
