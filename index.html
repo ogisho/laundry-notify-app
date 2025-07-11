@@ -150,11 +150,18 @@ let userId = "";
 
 // === セクション: LIFF初期化 ===
 async function initializeLiff() {
-  await liff.init({ liffId: LIFF_ID });
-  if (!liff.isLoggedIn()) liff.login();
-  const profile = await liff.getProfile();
-  userId = profile.userId;
-  await fetchSettings();
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) liff.login();
+    const profile = await liff.getProfile();
+    userId = profile.userId;
+    await fetchSettings();
+  } catch (e) {
+    console.error("LIFF初期化エラー:", e);
+  } finally {
+    // 読み込み後、loadingを必ず非表示にする
+    document.getElementById('loading').style.display = 'none';
+  }
 }
 
 // === セクション: 設定取得 ===
