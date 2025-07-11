@@ -155,6 +155,7 @@ async function initializeLiff() {
   if (!liff.isLoggedIn()) liff.login();
   const profile = await liff.getProfile();
   userId = profile.userId;
+  console.log("LIFF取得 userId:", userId);
 
   await fetchSettings();
 
@@ -188,6 +189,8 @@ async function fetchSettings() {
   try {
     const res = await fetch(`${PROXY_URL}?userId=${userId}`);
     const json = await res.json();
+    console.log("GASから取得したjson:", json);
+
     if (!json.success) return;
 
     const { notify, time, days, zipcode, umbrellaDays, umbrellaZipcodes } = json.data;
@@ -198,7 +201,9 @@ async function fetchSettings() {
     document.getElementById("zipcode").innerText = zipcode || "--";
 
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
+    console.log("umbrellaZipcodes:", umbrellaZipcodes);
     (umbrellaZipcodes || []).forEach((zip, i) => {
+      console.log(`傘Zip [${i}] →`, zip);
       document.getElementById(`umbrellaZip${i + 1}`).innerText = zip || "--";
     });
 
@@ -214,7 +219,9 @@ async function fetchSettings() {
       cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
     });
     for (let i = 1; i <= 5; i++) {
-      document.getElementById(`umbrellaZipInput${i}`).value = umbrellaZipcodes[i - 1] || "";
+      const val = umbrellaZipcodes[i - 1] || "";
+      console.log(`input用 umbrellaZipInput${i} →`, val);
+      document.getElementById(`umbrellaZipInput${i}`).value = val;
     }
   } catch (e) {
     console.error("設定取得エラー:", e);
@@ -227,6 +234,7 @@ async function saveNotifySettings() {
   const minute = document.getElementById("minuteSelect").value;
   const notifyTime = `${hour}:${minute}`;
   const body = { userId, notifyEnabled, notifyTime };
+  console.log("POST body (notify):", body);
   await postSettings(body, document.getElementById("notifySaveStatus"), "notify");
 }
 
@@ -235,6 +243,7 @@ async function saveLaundrySettings() {
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   const body = { userId, zipcode, notifyDays };
+  console.log("POST body (laundry):", body);
   await postSettings(body, document.getElementById("laundrySaveStatus"), "laundry");
 }
 
@@ -256,6 +265,7 @@ async function saveUmbrellaSettings() {
     umbrellaZip4,
     umbrellaZip5
   };
+  console.log("POST body (umbrella):", body);
   await postSettings(body, document.getElementById("umbrellaSaveStatus"), "umbrella");
 }
 
@@ -267,6 +277,8 @@ async function postSettings(body, statusElem, modalType) {
       body: JSON.stringify(body)
     });
     const result = await res.json();
+    console.log("保存結果:", result);
+
     if (result.success) {
       statusElem.innerText = "保存完了！";
       fetchSettings();
