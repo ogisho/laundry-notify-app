@@ -135,14 +135,6 @@ async function initializeLiff() {
   document.querySelectorAll('.edit-btn').forEach(btn => btn.disabled = false);
   document.getElementById('loading').style.display = 'none';
 }
-    
-async function initializeLiff() {
-  await liff.init({ liffId: LIFF_ID });
-  if (!liff.isLoggedIn()) liff.login();
-  const profile = await liff.getProfile();
-  userId = profile.userId;
-  fetchSettings();
-}
 
 function openModal(type) {
   if (type === 'notify') populateTimeSelectors();
