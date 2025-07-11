@@ -189,8 +189,6 @@ async function fetchSettings() {
   try {
     const res = await fetch(`${PROXY_URL}?userId=${userId}`);
     const json = await res.json();
-    console.log("GASから取得したjson:", json);
-
     if (!json.success) return;
 
     const { notify, time, days, zipcode, umbrellaDays, umbrellaZipcodes } = json.data;
@@ -201,11 +199,13 @@ async function fetchSettings() {
     document.getElementById("zipcode").innerText = zipcode || "--";
 
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
-    console.log("umbrellaZipcodes:", umbrellaZipcodes);
-    (umbrellaZipcodes || []).forEach((zip, i) => {
-      console.log(`傘Zip [${i}] →`, zip);
-      document.getElementById(`umbrellaZip${i + 1}`).innerText = zip || "--";
-    });
+
+    const zipArray = Array.isArray(umbrellaZipcodes) ? umbrellaZipcodes : [];
+    for (let i = 0; i < 5; i++) {
+      const zipValue = zipArray[i] || "--";
+      document.getElementById(`umbrellaZip${i + 1}`).innerText = zipValue;
+      document.getElementById(`umbrellaZipInput${i + 1}`).value = zipValue === "--" ? "" : zipValue;
+    }
 
     const [h, m] = (time || "00:00").split(":");
     document.getElementById("hourSelect").value = h;
@@ -218,11 +218,7 @@ async function fetchSettings() {
     document.querySelectorAll("#modal-umbrella .checkbox-group input").forEach(cb => {
       cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
     });
-    for (let i = 1; i <= 5; i++) {
-      const val = umbrellaZipcodes[i - 1] || "";
-      console.log(`input用 umbrellaZipInput${i} →`, val);
-      document.getElementById(`umbrellaZipInput${i}`).value = val;
-    }
+
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
