@@ -190,41 +190,30 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success) return;
 
-    const {
-      notify = "off",
-      time = "--:--",
-      days = "--",
-      zipcode = "--",
-      umbrellaDays = "--",
-      umbrellaZipcodes = []
-    } = json.data;
+    const { notify, time, days, zipcode, umbrellaDays, umbrellaZipcodes } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-    document.getElementById("notifyTime").innerText = time;
-    document.getElementById("notifyDays").innerText = days;
-    document.getElementById("zipcode").innerText = zipcode;
-    document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays;
+    document.getElementById("notifyTime").innerText = time || "--:--";
+    document.getElementById("notifyDays").innerText = days || "--";
+    document.getElementById("zipcode").innerText = zipcode || "--";
 
-    const safeUmbrellaZipcodes = Array.isArray(umbrellaZipcodes) ? umbrellaZipcodes : [];
-    for (let i = 0; i < 5; i++) {
-      const zip = safeUmbrellaZipcodes[i] || "--";
-      document.getElementById(`umbrellaZip${i + 1}`).innerText = zip;
-    }
+    document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
+    document.getElementById("umbrellaZip1").innerText = umbrellaZipcodes[0] || "--";
 
-    const [h, m] = time.split(":");
-    document.getElementById("hourSelect").value = h || "00";
-    document.getElementById("minuteSelect").value = m || "00";
+    const [h, m] = (time || "00:00").split(":");
+    document.getElementById("hourSelect").value = h;
+    document.getElementById("minuteSelect").value = m;
     document.getElementById("modalToggle").checked = notify === "on";
     document.getElementById("zipcodeInput").value = zipcode || "";
+
     document.querySelectorAll("#modal-laundry .checkbox-group input").forEach(cb => {
-      cb.checked = days.includes(cb.value);
+      cb.checked = days && days.includes(cb.value);
     });
     document.querySelectorAll("#modal-umbrella .checkbox-group input").forEach(cb => {
-      cb.checked = umbrellaDays.includes(cb.value);
+      cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
     });
-    for (let i = 1; i <= 5; i++) {
-      document.getElementById(`umbrellaZipInput${i}`).value = safeUmbrellaZipcodes[i - 1] || "";
-    }
+
+    document.getElementById("umbrellaZipInput1").value = umbrellaZipcodes[0] || "";
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
@@ -251,19 +240,11 @@ async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   const umbrellaZip1 = document.getElementById("umbrellaZipInput1").value.trim();
-  const umbrellaZip2 = document.getElementById("umbrellaZipInput2").value.trim();
-  const umbrellaZip3 = document.getElementById("umbrellaZipInput3").value.trim();
-  const umbrellaZip4 = document.getElementById("umbrellaZipInput4").value.trim();
-  const umbrellaZip5 = document.getElementById("umbrellaZipInput5").value.trim();
 
   const body = {
     userId,
     umbrellaDays,
-    umbrellaZip1,
-    umbrellaZip2,
-    umbrellaZip3,
-    umbrellaZip4,
-    umbrellaZip5
+    umbrellaZip1
   };
   await postSettings(body, document.getElementById("umbrellaSaveStatus"), "umbrella");
 }
@@ -272,8 +253,7 @@ async function postSettings(body, statusElem, modalType) {
   statusElem.innerText = "保存中…";
   try {
     const res = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
     const result = await res.json();
