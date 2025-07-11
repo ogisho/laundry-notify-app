@@ -224,6 +224,9 @@ async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   const umbrellaZip = document.getElementById("umbrellaZipInput1").value.trim();
+
+  console.log("傘通知保存送信データ:", { userId, umbrellaDays, umbrellaZip });  // ← 追加
+
   await postSettings({ userId, umbrellaDays, umbrellaZip }, "umbrella");
 }
 
