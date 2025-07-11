@@ -6,7 +6,6 @@
   <title>通知設定画面</title>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <style>
-    /* === スタイルは省略なし、前回と完全同一 === */
     body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
     h2 { margin-bottom: 16px; text-align: left; }
     .card {
@@ -122,7 +121,7 @@
   </style>
 </head>
 <body>
-    <h2>通知設定画面</h2>
+  <h2>通知設定画面</h2>
   <div class="card">
     <div class="section-title">
       通知メニュー
@@ -206,10 +205,7 @@
   </div>
 
   <script>
-
-const PROXY_PREFIX = "https://cors-proxy.ogisho-other.workers.dev/";
-const GAS_DEPLOY_URL = "https://script.google.com/macros/s/AKfycbw2SpfcDqXRJdMnXJ-L50DLfj86OBl8NI2HSzirMHdqH6ahwOEYQ2MyEbSWuhm-Ds78/exec";
-const GAS_URL = PROXY_PREFIX + GAS_DEPLOY_URL;
+const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
 
@@ -242,7 +238,7 @@ function populateTimeSelectors() {
 
 async function fetchSettings() {
   try {
-    const res = await fetch(`${GAS_URL}?userId=${userId}`);
+    const res = await fetch(`${PROXY_URL}?userId=${userId}`);
     const json = await res.json();
     if (!json.success || !json.data) return;
 
@@ -280,7 +276,7 @@ async function saveNotifySettings() {
   const body = { userId, notifyEnabled, notifyTime };
 
   try {
-    const res = await fetch(GAS_URL, {
+    const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -288,7 +284,6 @@ async function saveNotifySettings() {
     const result = await res.json();
     console.log("🔁 saveNotifySettings() result:", result);
     if (result.success) {
-      // モーダル内の値を反映して表示更新
       document.getElementById("statusText").innerText = notifyEnabled === "on" ? "ON" : "OFF";
       document.getElementById("toggleNotify").checked = notifyEnabled === "on";
       document.getElementById("notifyTime").innerText = notifyTime;
@@ -316,7 +311,7 @@ async function saveLaundrySettings() {
   const body = { userId, zipcode, notifyDays };
 
   try {
-    const res = await fetch(GAS_URL, {
+    const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -340,7 +335,6 @@ window.onload = () => {
   populateTimeSelectors();
   initializeLiff();
 };
-
 </script>
 </body>
 </html>
