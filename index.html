@@ -38,6 +38,10 @@
   </style>
 </head>
 <body>
+  <div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;font-size:18px;">
+    情報を取得中です...
+  </div>
+
   <h2>通知設定画面</h2>
 
   <!-- 通知メニュー -->
@@ -117,6 +121,21 @@ const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
 
+async function initializeLiff() {
+  document.querySelectorAll('.edit-btn').forEach(btn => btn.disabled = true);
+  document.getElementById('loading').style.display = 'flex';
+
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) liff.login();
+  const profile = await liff.getProfile();
+  userId = profile.userId;
+
+  await fetchSettings();
+
+  document.querySelectorAll('.edit-btn').forEach(btn => btn.disabled = false);
+  document.getElementById('loading').style.display = 'none';
+}
+    
 async function initializeLiff() {
   await liff.init({ liffId: LIFF_ID });
   if (!liff.isLoggedIn()) liff.login();
