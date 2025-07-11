@@ -116,7 +116,33 @@
     </div>
   </div>
 
-  <script>
+  <!-- モーダル: 傘通知 -->
+  <div class="modal" id="modal-umbrella">
+    <div class="modal-content">
+      <h3>傘通知の編集</h3>
+      <div class="checkbox-group">
+        <label><input type="checkbox" value="月">月</label>
+        <label><input type="checkbox" value="火">火</label>
+        <label><input type="checkbox" value="水">水</label>
+        <label><input type="checkbox" value="木">木</label>
+        <label><input type="checkbox" value="金">金</label>
+        <label><input type="checkbox" value="土">土</label>
+        <label><input type="checkbox" value="日">日</label>
+      </div><br>
+      <label>①郵便番号：<input type="text" id="umbrellaZipInput1" maxlength="7"></label><br>
+      <label>②郵便番号：<input type="text" id="umbrellaZipInput2" maxlength="7"></label><br>
+      <label>③郵便番号：<input type="text" id="umbrellaZipInput3" maxlength="7"></label><br>
+      <label>④郵便番号：<input type="text" id="umbrellaZipInput4" maxlength="7"></label><br>
+      <label>⑤郵便番号：<input type="text" id="umbrellaZipInput5" maxlength="7"></label>
+      <p class="save-status" id="umbrellaSaveStatus"></p>
+      <div class="modal-buttons">
+        <button onclick="closeModal('umbrella')">キャンセル</button>
+        <button onclick="saveUmbrellaSettings()">保存</button>
+      </div>
+    </div>
+  </div>
+
+<script>
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
@@ -184,6 +210,12 @@ async function fetchSettings() {
     document.querySelectorAll("#modal-laundry .checkbox-group input").forEach(cb => {
       cb.checked = days && days.includes(cb.value);
     });
+    document.querySelectorAll("#modal-umbrella .checkbox-group input").forEach(cb => {
+      cb.checked = umbrellaDays && umbrellaDays.includes(cb.value);
+    });
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`umbrellaZipInput${i}`).value = umbrellaZipcodes[i - 1] || "";
+    }
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
@@ -204,6 +236,17 @@ async function saveLaundrySettings() {
     .map(cb => cb.value).join(",");
   const body = { userId, zipcode, notifyDays };
   await postSettings(body, document.getElementById("laundrySaveStatus"), "laundry");
+}
+
+async function saveUmbrellaSettings() {
+  const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
+    .map(cb => cb.value).join(",");
+  const umbrellaZipcodes = [];
+  for (let i = 1; i <= 5; i++) {
+    umbrellaZipcodes.push(document.getElementById(`umbrellaZipInput${i}`).value.trim());
+  }
+  const body = { userId, umbrellaDays, umbrellaZipcodes };
+  await postSettings(body, document.getElementById("umbrellaSaveStatus"), "umbrella");
 }
 
 async function postSettings(body, statusElem, modalType) {
