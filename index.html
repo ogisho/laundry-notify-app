@@ -182,12 +182,26 @@ function closeModal(type) {
 }
 
 async function fetchSettings() {
+  console.log("=== fetchSettings開始 ===");
+  console.log("userId:", userId);
+  
   try {
-    const res = await fetch(`${PROXY_URL}?userId=${userId}`);
+    const url = `${PROXY_URL}?userId=${userId}`;
+    console.log("GET URL:", url);
+    
+    const res = await fetch(url);
+    console.log("GET response status:", res.status);
+    
     const json = await res.json();
-    if (!json.success) return;
+    console.log("GET response json:", json);
+    
+    if (!json.success) {
+      console.log("GET失敗:", json);
+      return;
+    }
 
     const { notify, time, days, zipcode, umbrellaDays, umbrellaZip } = json.data;
+    console.log("取得データ:", { notify, time, days, zipcode, umbrellaDays, umbrellaZip });
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = time || "--:--";
@@ -195,14 +209,20 @@ async function fetchSettings() {
     document.getElementById("zipcode").innerText = zipcode || "--";
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
     document.getElementById("umbrellaZip1").innerText = umbrellaZip || "--";
+    
+    console.log("画面更新完了");
+    console.log("umbrellaNotifyDays表示値:", document.getElementById("umbrellaNotifyDays").innerText);
+    console.log("umbrellaZip1表示値:", document.getElementById("umbrellaZip1").innerText);
 
     const [h, m] = (time || "00:00").split(":");
     document.getElementById("hourSelect").value = h;
     document.getElementById("minuteSelect").value = m;
 
     document.querySelectorAll('.save-status').forEach(el => el.innerText = "");
+    console.log("=== fetchSettings完了 ===");
   } catch (e) {
     console.error("設定取得エラー:", e);
+    console.log("=== fetchSettingsエラー終了 ===");
   }
 }
 
@@ -225,23 +245,33 @@ async function saveUmbrellaSettings() {
     .map(cb => cb.value).join(",");
   const umbrellaZip = document.getElementById("umbrellaZipInput1").value.trim();
 
-  console.log("傘通知保存送信データ:", { userId, umbrellaDays, umbrellaZip });  // ← 追加
+  console.log("=== 傘通知保存開始 ===");
+  console.log("傘通知保存送信データ:", { userId, umbrellaDays, umbrellaZip });
 
   await postSettings({ userId, umbrellaDays, umbrellaZip }, "umbrella");
 }
 
 async function postSettings(body, modalType) {
+  console.log(`=== ${modalType} postSettings開始 ===`);
+  console.log("POST body:", body);
+  
   const statusElem = document.getElementById(`${modalType}SaveStatus`);
   statusElem.innerText = "保存中...";
   try {
+    console.log("POST URL:", PROXY_URL);
     const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
+    console.log("POST response status:", res.status);
+    
     const result = await res.json();
+    console.log("POST response result:", result);
+    
     if (result.success) {
       statusElem.innerText = "保存完了！";
+      console.log("保存成功、設定再取得開始");
       await fetchSettings();
       setTimeout(() => {
         statusElem.innerText = "";
