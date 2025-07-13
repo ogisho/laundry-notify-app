@@ -211,16 +211,24 @@ async function fetchSettings() {
     const res = await fetch(url);
     const json = await res.json();
     if (!json.success) return;
+
     const { notify, notifyTime, notifyDays, zipcode, umbrellaDays, umbrellaZip } = json.data;
+
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime || "--:--";
     document.getElementById("notifyDays").innerText = notifyDays || "--";
     document.getElementById("zipcode").innerText = zipcode || "--";
     document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
-    document.getElementById("umbrellaZip1").innerText = umbrellaZip || "--";
+
+    const zipList = umbrellaZip ? umbrellaZip.split(",") : [];
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`umbrellaZip${i}`).innerText = zipList[i - 1] || "--";
+    }
+
     const [h, m] = (notifyTime || "00:00").split(":");
     document.getElementById("hourSelect").value = h;
     document.getElementById("minuteSelect").value = m;
+
     document.querySelectorAll('.save-status').forEach(el => el.innerText = "");
   } catch (e) {
     console.error("設定取得エラー:", e);
@@ -235,7 +243,7 @@ async function saveNotifySettings() {
 }
 
 async function saveLaundrySettings() {
-  const zipcode = document.getElementById("zipcodeInput").value;
+  const zipcode = document.getElementById("zipcodeInput").value.trim();
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
   await postSettings({ userId, zipcode, notifyDays }, "laundry");
@@ -244,7 +252,12 @@ async function saveLaundrySettings() {
 async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
     .map(cb => cb.value).join(",");
-  const umbrellaZip = document.getElementById("umbrellaZipInput1").value.trim();
+  const umbrellaZips = [];
+  for (let i = 1; i <= 5; i++) {
+    const zip = document.getElementById(`umbrellaZipInput${i}`).value.trim();
+    if (zip) umbrellaZips.push(zip);
+  }
+  const umbrellaZip = umbrellaZips.join(",");
   await postSettings({ userId, umbrellaDays, umbrellaZip }, "umbrella");
 }
 
