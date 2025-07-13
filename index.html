@@ -56,7 +56,7 @@
     <div class="row"><span>通知時間：</span><span id="notifyTime">--:--</span></div>
   </div>
 
-  <!-- 洗濯指数 -->
+    <!-- 洗濯指数 -->
   <div class="card">
     <div class="section-title">
       洗濯指数
@@ -72,7 +72,6 @@
       傘通知
       <button class="edit-btn" onclick="openModal('umbrella')">編集</button>
     </div>
-    <div class="row"><span>通知曜日：</span><span id="umbrellaNotifyDays">--</span></div>
     <div class="row"><span>①郵便番号：</span><span id="umbrellaZip1">--</span></div>
     <div class="row"><span>②郵便番号：</span><span id="umbrellaZip2">--</span></div>
     <div class="row"><span>③郵便番号：</span><span id="umbrellaZip3">--</span></div>
@@ -80,7 +79,7 @@
     <div class="row"><span>⑤郵便番号：</span><span id="umbrellaZip5">--</span></div>
   </div>
 
-   <!-- 通知メニュー モーダル -->
+  <!-- モーダル: 通知メニュー -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
       <h3>通知メニューの編集</h3>
@@ -96,7 +95,7 @@
     </div>
   </div>
 
-  <!-- 洗濯指数 モーダル -->
+  <!-- モーダル: 洗濯指数 -->
   <div class="modal" id="modal-laundry">
     <div class="modal-content">
       <h3>洗濯指数の編集</h3>
@@ -109,7 +108,7 @@
         <label><input type="checkbox" value="土">土</label>
         <label><input type="checkbox" value="日">日</label>
       </div><br>
-      <label>郵便番号：<input type="text" id="zipcodeInput" maxlength="7" pattern="\d{7}" required></label>
+      <label>郵便番号：<input type="text" id="zipcodeInput" maxlength="7" pattern="\\d{7}" required></label>
       <p id="zipcodeError" style="color:red; display:none;">7桁の半角数字で入力してください</p>
       <p class="save-status" id="laundrySaveStatus"></p>
       <div class="modal-buttons">
@@ -119,19 +118,10 @@
     </div>
   </div>
 
-  <!-- 傘通知 モーダル -->
+  <!-- モーダル: 傘通知 -->
   <div class="modal" id="modal-umbrella">
     <div class="modal-content">
       <h3>傘通知の編集</h3>
-      <div class="checkbox-group">
-        <label><input type="checkbox" value="月">月</label>
-        <label><input type="checkbox" value="火">火</label>
-        <label><input type="checkbox" value="水">水</label>
-        <label><input type="checkbox" value="木">木</label>
-        <label><input type="checkbox" value="金">金</label>
-        <label><input type="checkbox" value="土">土</label>
-        <label><input type="checkbox" value="日">日</label>
-      </div><br>
       <label>①郵便番号：<input type="text" id="umbrellaZipInput1"></label><br>
       <label>②郵便番号：<input type="text" id="umbrellaZipInput2"></label><br>
       <label>③郵便番号：<input type="text" id="umbrellaZipInput3"></label><br>
@@ -145,7 +135,7 @@
     </div>
   </div>
 
-<script>
+  <script>
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
@@ -178,21 +168,7 @@ async function showLatestGasUrl() {
   }
 }
 
-function populateTimeSelectors() {
-  const hourSelect = document.getElementById("hourSelect");
-  const minuteSelect = document.getElementById("minuteSelect");
-  hourSelect.innerHTML = "";
-  minuteSelect.innerHTML = "";
-  for (let h = 0; h < 24; h++) {
-    hourSelect.innerHTML += `<option value="${h.toString().padStart(2, '0')}">${h.toString().padStart(2, '0')}</option>`;
-  }
-  for (let m = 0; m < 60; m += 5) {
-    minuteSelect.innerHTML += `<option value="${m.toString().padStart(2, '0')}">${m.toString().padStart(2, '0')}</option>`;
-  }
-}
-
 function openModal(type) {
-  if (type === 'notify') populateTimeSelectors();
   const modal = document.getElementById(`modal-${type}`);
   if (modal) modal.style.display = "flex";
 }
@@ -209,25 +185,18 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success) return;
 
-    const { notify, notifyTime, notifyDays, zipcode, umbrellaDays, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
+    const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime || "--:--";
     document.getElementById("notifyDays").innerText = notifyDays || "--";
     document.getElementById("zipcode").innerText = zipcode || "--";
-    document.getElementById("umbrellaNotifyDays").innerText = umbrellaDays || "--";
 
     document.getElementById("umbrellaZip1").innerText = umbrellaZip1 || "--";
     document.getElementById("umbrellaZip2").innerText = umbrellaZip2 || "--";
     document.getElementById("umbrellaZip3").innerText = umbrellaZip3 || "--";
     document.getElementById("umbrellaZip4").innerText = umbrellaZip4 || "--";
     document.getElementById("umbrellaZip5").innerText = umbrellaZip5 || "--";
-
-    const [h, m] = (notifyTime || "00:00").split(":");
-    document.getElementById("hourSelect").value = h;
-    document.getElementById("minuteSelect").value = m;
-
-    document.querySelectorAll('.save-status').forEach(el => el.innerText = "");
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
@@ -247,7 +216,6 @@ async function saveLaundrySettings() {
 }
 
 async function saveUmbrellaSettings() {
-  const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked")).map(cb => cb.value).join(",");
   const umbrellaZips = [];
   for (let i = 1; i <= 5; i++) {
     const zip = document.getElementById(`umbrellaZipInput${i}`).value.trim();
@@ -256,7 +224,6 @@ async function saveUmbrellaSettings() {
   await postSettings({
     userId,
     type: "umbrella",
-    umbrellaDays,
     umbrellaZip1: umbrellaZips[0] || "",
     umbrellaZip2: umbrellaZips[1] || "",
     umbrellaZip3: umbrellaZips[2] || "",
