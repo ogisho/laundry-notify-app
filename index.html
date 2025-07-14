@@ -146,12 +146,30 @@ async function initializeLiff() {
     if (!liff.isLoggedIn()) liff.login();
     const profile = await liff.getProfile();
     userId = profile.userId;
+
+    initTimeSelectors(); // ★ 時間セレクト初期化追加
     await fetchSettings();
     await showLatestGasUrl();
   } catch (e) {
     console.error("LIFF初期化エラー:", e);
   } finally {
     document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function initTimeSelectors() {
+  const hourSelect = document.getElementById("hourSelect");
+  const minuteSelect = document.getElementById("minuteSelect");
+
+  for (let h = 0; h < 24; h++) {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = h.toString().padStart(2, "0");
+    hourSelect.appendChild(opt);
+  }
+  for (let m = 0; m < 60; m++) {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = m.toString().padStart(2, "0");
+    minuteSelect.appendChild(opt);
   }
 }
 
@@ -188,15 +206,15 @@ async function fetchSettings() {
     const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-    document.getElementById("notifyTime").innerText = notifyTime || "--:--";
-    document.getElementById("notifyDays").innerText = notifyDays || "--";
-    document.getElementById("zipcode").innerText = zipcode || "--";
+    document.getElementById("notifyTime").innerText = notifyTime !== "未登録" ? notifyTime : "--:--";
+    document.getElementById("notifyDays").innerText = notifyDays !== "未登録" ? notifyDays : "--";
+    document.getElementById("zipcode").innerText = zipcode !== "未登録" ? zipcode : "--";
 
-    document.getElementById("umbrellaZip1").innerText = umbrellaZip1 || "--";
-    document.getElementById("umbrellaZip2").innerText = umbrellaZip2 || "--";
-    document.getElementById("umbrellaZip3").innerText = umbrellaZip3 || "--";
-    document.getElementById("umbrellaZip4").innerText = umbrellaZip4 || "--";
-    document.getElementById("umbrellaZip5").innerText = umbrellaZip5 || "--";
+    document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "未登録" ? umbrellaZip1 : "--";
+    document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "未登録" ? umbrellaZip2 : "--";
+    document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "未登録" ? umbrellaZip3 : "--";
+    document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "未登録" ? umbrellaZip4 : "--";
+    document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "未登録" ? umbrellaZip5 : "--";
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
@@ -206,23 +224,26 @@ async function saveNotifySettings() {
   const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
   const hour = document.getElementById("hourSelect").value;
   const minute = document.getElementById("minuteSelect").value;
-  const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
-    .map(cb => cb.value)
-    .join(",");
-  
+
   await postSettings({
     userId,
     type: "notify",
     notifyEnabled,
-    notifyTime: `${hour}:${minute}`,
-    notifyDays
+    notifyTime: `${hour}:${minute}`
+    // ★ 通知メニューでは notifyDays は送らない
   }, "notify");
 }
 
 async function saveLaundrySettings() {
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked")).map(cb => cb.value).join(",");
   const zipcode = document.getElementById("zipcodeInput").value.trim();
-  await postSettings({ userId, type: "laundry", notifyDays, zipcode }, "laundry");
+
+  await postSettings({
+    userId,
+    type: "laundry",
+    notifyDays,
+    zipcode
+  }, "laundry");
 }
 
 async function saveUmbrellaSettings() {
@@ -231,6 +252,7 @@ async function saveUmbrellaSettings() {
     const zip = document.getElementById(`umbrellaZipInput${i}`).value.trim();
     if (zip) umbrellaZips.push(zip);
   }
+
   await postSettings({
     userId,
     type: "umbrella",
