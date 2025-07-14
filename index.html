@@ -248,6 +248,19 @@ async function fetchSettings() {
     document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
     document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
     document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
+
+    // ✅ 追加: window変数に保存
+    window.notify = notify;
+    window.notifyTime = notifyTime;
+    window.laundryDays = laundryDays;
+    window.zipcode = zipcode;
+    window.umbrellaDays = umbrellaDays;
+    window.umbrellaZip1 = umbrellaZip1;
+    window.umbrellaZip2 = umbrellaZip2;
+    window.umbrellaZip3 = umbrellaZip3;
+    window.umbrellaZip4 = umbrellaZip4;
+    window.umbrellaZip5 = umbrellaZip5;
+
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
