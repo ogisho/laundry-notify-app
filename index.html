@@ -147,7 +147,7 @@ async function initializeLiff() {
     const profile = await liff.getProfile();
     userId = profile.userId;
 
-    initTimeSelectors(); // ★ 時間セレクト初期化追加
+    
     await fetchSettings();
     await showLatestGasUrl();
   } catch (e) {
