@@ -66,18 +66,19 @@
     <div class="row"><span>郵便番号：</span><span id="zipcode">--</span></div>
   </div>
 
-  <!-- 傘通知 -->
-  <div class="card">
-    <div class="section-title">
-      傘通知
-      <button class="edit-btn" onclick="openModal('umbrella')">編集</button>
-    </div>
-    <div class="row"><span>①郵便番号：</span><span id="umbrellaZip1">--</span></div>
-    <div class="row"><span>②郵便番号：</span><span id="umbrellaZip2">--</span></div>
-    <div class="row"><span>③郵便番号：</span><span id="umbrellaZip3">--</span></div>
-    <div class="row"><span>④郵便番号：</span><span id="umbrellaZip4">--</span></div>
-    <div class="row"><span>⑤郵便番号：</span><span id="umbrellaZip5">--</span></div>
+ <!-- 傘通知 -->
+<div class="card">
+  <div class="section-title">
+    傘通知
+    <button class="edit-btn" onclick="openModal('umbrella')">編集</button>
   </div>
+  <div class="row"><span>通知曜日：</span><span id="umbrellaDays">--</span></div>
+  <div class="row"><span>①郵便番号：</span><span id="umbrellaZip1">--</span></div>
+  <div class="row"><span>②郵便番号：</span><span id="umbrellaZip2">--</span></div>
+  <div class="row"><span>③郵便番号：</span><span id="umbrellaZip3">--</span></div>
+  <div class="row"><span>④郵便番号：</span><span id="umbrellaZip4">--</span></div>
+  <div class="row"><span>⑤郵便番号：</span><span id="umbrellaZip5">--</span></div>
+</div>
 
   <!-- モーダル: 通知メニュー -->
   <div class="modal" id="modal-notify">
@@ -119,21 +120,30 @@
   </div>
 
   <!-- モーダル: 傘通知 -->
-  <div class="modal" id="modal-umbrella">
-    <div class="modal-content">
-      <h3>傘通知の編集</h3>
-      <label>①郵便番号：<input type="text" id="umbrellaZipInput1"></label><br>
-      <label>②郵便番号：<input type="text" id="umbrellaZipInput2"></label><br>
-      <label>③郵便番号：<input type="text" id="umbrellaZipInput3"></label><br>
-      <label>④郵便番号：<input type="text" id="umbrellaZipInput4"></label><br>
-      <label>⑤郵便番号：<input type="text" id="umbrellaZipInput5"></label>
-      <p class="save-status" id="umbrellaSaveStatus"></p>
-      <div class="modal-buttons">
-        <button onclick="closeModal('umbrella')">キャンセル</button>
-        <button onclick="saveUmbrellaSettings()">保存</button>
-      </div>
+<div class="modal" id="modal-umbrella">
+  <div class="modal-content">
+    <h3>傘通知の編集</h3>
+    <div class="checkbox-group">
+      <label><input type="checkbox" value="月">月</label>
+      <label><input type="checkbox" value="火">火</label>
+      <label><input type="checkbox" value="水">水</label>
+      <label><input type="checkbox" value="木">木</label>
+      <label><input type="checkbox" value="金">金</label>
+      <label><input type="checkbox" value="土">土</label>
+      <label><input type="checkbox" value="日">日</label>
+    </div><br>
+    <label>①郵便番号：<input type="text" id="umbrellaZipInput1"></label><br>
+    <label>②郵便番号：<input type="text" id="umbrellaZipInput2"></label><br>
+    <label>③郵便番号：<input type="text" id="umbrellaZipInput3"></label><br>
+    <label>④郵便番号：<input type="text" id="umbrellaZipInput4"></label><br>
+    <label>⑤郵便番号：<input type="text" id="umbrellaZipInput5"></label>
+    <p class="save-status" id="umbrellaSaveStatus"></p>
+    <div class="modal-buttons">
+      <button onclick="closeModal('umbrella')">キャンセル</button>
+      <button onclick="saveUmbrellaSettings()">保存</button>
     </div>
   </div>
+</div>
 
 <script>
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
