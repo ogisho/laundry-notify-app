@@ -43,6 +43,9 @@
   <div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;font-size:18px;">
     情報を取得中です...しばらくお待ち下さい。
   </div>
+  <!-- ===== ここからここまでテストボタン ===== -->
+<button id="testButton" class="edit-btn" style="margin-bottom: 20px;">テスト実行</button>
+<!-- ===== ここからここまでテストボタン ===== -->
 
   <h2>通知設定画面</h2>
 
@@ -385,6 +388,16 @@ function openModal(type) {
   }
 }
 
+// ===== ここからここまでテストボタン =====
+async function runTest() {
+  alert("テスト実行ボタンが押されました！");
+  // TODO: ここで fetch() などの処理を書けば、GAS側のテストAPIを呼び出せる
+}
+
+document.getElementById("testButton").addEventListener("click", runTest);
+// ===== ここからここまでテストボタン =====
+  
+  
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
