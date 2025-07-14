@@ -205,8 +205,9 @@ async function fetchSettings() {
 
     const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
 
-    // 新規ユーザーの場合、最低限登録
-    if (notify === "未登録" && notifyTime === "未登録" && notifyDays === "未登録") {
+    // 🚩 新規ユーザーなら最低限登録する（消しちゃいけない大事な部分！）
+    if (notify === "--" && notifyTime === "--:--" && notifyDays === "--") {
+      console.log("新規ユーザー検知、初期登録を実行します");
       await postSettings({
         userId,
         type: "notify",
@@ -216,15 +217,15 @@ async function fetchSettings() {
     }
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-    document.getElementById("notifyTime").innerText = notifyTime !== "未登録" ? notifyTime : "--:--";
-    document.getElementById("notifyDays").innerText = notifyDays !== "未登録" ? notifyDays : "--";
-    document.getElementById("zipcode").innerText = zipcode !== "未登録" ? zipcode : "--";
+    document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
+    document.getElementById("notifyDays").innerText = notifyDays !== "--" ? notifyDays : "--";
+    document.getElementById("zipcode").innerText = zipcode !== "--" ? zipcode : "--";
 
-    document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "未登録" ? umbrellaZip1 : "--";
-    document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "未登録" ? umbrellaZip2 : "--";
-    document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "未登録" ? umbrellaZip3 : "--";
-    document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "未登録" ? umbrellaZip4 : "--";
-    document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "未登録" ? umbrellaZip5 : "--";
+    document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "--" ? umbrellaZip1 : "--";
+    document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "--" ? umbrellaZip2 : "--";
+    document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
+    document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
+    document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
   } catch (e) {
     console.error("設定取得エラー:", e);
   }
