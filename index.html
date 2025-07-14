@@ -213,21 +213,20 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success) return;
 
-    const { notify, notifyTime, laundryDays, zipcode, umbrellaDays, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
+    const {
+      notify,
+      notifyTime,
+      notifyDays,
+      laundryDays,        // ← 洗濯曜日
+      zipcode,
+      umbrellaDays,       // ← 傘曜日
+      umbrellaZip1,
+      umbrellaZip2,
+      umbrellaZip3,
+      umbrellaZip4,
+      umbrellaZip5
+    } = json.data;
 
-document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
-document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
-document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
-document.getElementById("zipcode").innerText = zipcode !== "--" ? zipcode : "--";
-
-document.getElementById("umbrellaDays").innerText = umbrellaDays !== "--" ? umbrellaDays : "--";
-document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "--" ? umbrellaZip1 : "--";
-document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "--" ? umbrellaZip2 : "--";
-document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
-document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
-document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
-
-    // 🚩 新規ユーザーなら最低限登録する（消しちゃいけない大事な部分！）
     if (notify === "--" && notifyTime === "--:--" && notifyDays === "--") {
       console.log("新規ユーザー検知、初期登録を実行します");
       await postSettings({
@@ -240,9 +239,10 @@ document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbr
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
-    document.getElementById("notifyDays").innerText = notifyDays !== "--" ? notifyDays : "--";
+    document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
     document.getElementById("zipcode").innerText = zipcode !== "--" ? zipcode : "--";
 
+    document.getElementById("umbrellaDays").innerText = umbrellaDays !== "--" ? umbrellaDays : "--";
     document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "--" ? umbrellaZip1 : "--";
     document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "--" ? umbrellaZip2 : "--";
     document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
@@ -281,6 +281,10 @@ async function saveLaundrySettings() {
 }
 
 async function saveUmbrellaSettings() {
+  const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
+    .map(cb => cb.value)
+    .join(",");
+
   const umbrellaZips = [];
   for (let i = 1; i <= 5; i++) {
     const zip = document.getElementById(`umbrellaZipInput${i}`).value.trim();
@@ -290,6 +294,7 @@ async function saveUmbrellaSettings() {
   await postSettings({
     userId,
     type: "umbrella",
+    umbrellaDays,                          // ← 追加
     umbrellaZip1: umbrellaZips[0] || "",
     umbrellaZip2: umbrellaZips[1] || "",
     umbrellaZip3: umbrellaZips[2] || "",
