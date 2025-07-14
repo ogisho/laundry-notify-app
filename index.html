@@ -43,10 +43,12 @@
   <div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;font-size:18px;">
     情報を取得中です...しばらくお待ち下さい。
   </div>
-<!-- ===== ここからここまでテストボタン ===== -->
-<button id="testButton" class="edit-btn" style="margin-bottom: 20px;">テスト実行</button>
-<div id="testResult" style="margin-top: 20px; white-space: pre-wrap;"></div>
-<!-- ===== ここからここまでテストボタン ===== -->
+  <!-- === テストここから === -->
+  <button id="testButton" class="edit-btn" style="margin-bottom: 20px;">テスト実行</button>
+  <div id="testResult" style="white-space: pre-wrap; background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+    （ここにテスト結果が表示されます）
+  </div>
+  <!-- === テストここまで === -->
 
   <h2>通知設定画面</h2>
 
@@ -389,79 +391,33 @@ function openModal(type) {
   }
 }
 
-// ===== ここからここまでテストボタン =====
-async function runTest() {
-  const resultElem = document.getElementById("testResult");
-  resultElem.innerText = "テスト実行中...\n";
-
-  const zips = [];
-  if (window.zipcode && window.zipcode !== "--") zips.push({ label: "洗濯", zip: window.zipcode });
-  for (let i = 1; i <= 5; i++) {
-    const zip = window[`umbrellaZip${i}`];
-    if (zip && zip !== "--") zips.push({ label: `傘${i}`, zip });
-  }
-
-  if (zips.length === 0) {
-    resultElem.innerText += "郵便番号が登録されていません。";
-    return;
-  }
-
-  for (const { label, zip } of zips) {
-    try {
-      const latlngObj = await getLatLngFromZip(zip);
-      if (latlngObj.latlng === "未登録") {
-        resultElem.innerText += `${label}: 郵便番号${zip} → 位置情報未取得\n`;
-        continue;
-      }
-
-      const [lat, lon] = latlngObj.latlng.split(',');
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,alerts&units=metric&lang=ja&appid=${API_KEY}`);
-      const weather = await response.json();
-
-      const dailyPop = Math.round(weather.daily[0].pop * 100);
-      const rainHours = weather.hourly.slice(0, 12).filter(h => h.pop >= 0.4);
-      const rainTimes = rainHours.map(h => new Date(h.dt * 1000).getHours().toString().padStart(2, '0') + ":00").join(", ");
-
-      let summary = dailyPop <= 20 ? "晴れ予報☀️" :
-                    rainTimes ? `雨の可能性🌧️ 時間: ${rainTimes}` :
-                    "1日中雨予報☔";
-
-      resultElem.innerText += `${label}: 郵便番号${zip} → ${summary}\n`;
-    } catch (e) {
-      console.error(`${label} エラー`, e);
-      resultElem.innerText += `${label}: 郵便番号${zip} → 天気情報取得失敗\n`;
-    }
-  }
-}
-
-async function getLatLngFromZip(zip) {
-  const apiKey = "6f4bf39d788f4279b276060832cf91be";
-  const zipClean = zip.replace("-", "").trim();
-  const url = `https://api.opencagedata.com/geocode/v1/json?q=${zipClean}&countrycode=jp&key=${apiKey}&language=ja`;
-
-  try {
-    const res = await fetch(url);
-    const json = await res.json();
-    const result = json.results?.[0];
-    if (!result) return { location: "未登録", latlng: "未登録" };
-
-    const location = result.formatted || "未登録";
-    const latlng = `${result.geometry.lat},${result.geometry.lng}`;
-    return { location, latlng };
-  } catch (e) {
-    console.error("郵便番号位置取得エラー", e);
-    return { location: "未登録", latlng: "未登録" };
-  }
-}
-
-document.getElementById("testButton").addEventListener("click", runTest);
-// ===== ここからここまでテストボタン =====
-  
-  
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
+
+  // === テストここから ===
+  document.getElementById('testButton').addEventListener('click', async () => {
+    const testDiv = document.getElementById('testResult');
+    testDiv.innerText = 'テスト実行中...';
+
+    try {
+      const res = await fetch(`${PROXY_URL}?view=testNotify`);
+      const json = await res.json();
+      if (json.success) {
+        testDiv.innerText = json.result || '結果なし';
+      } else {
+        testDiv.innerText = 'テスト取得失敗';
+      }
+    } catch (e) {
+      console.error('テスト取得エラー:', e);
+      testDiv.innerText = 'テスト取得エラー';
+    }
+  });
+  // === テストここまで ===
 };
+  
+  
+
 </script>
 </body>
 </html>
