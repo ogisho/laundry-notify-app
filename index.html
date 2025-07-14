@@ -206,7 +206,17 @@ async function saveNotifySettings() {
   const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
   const hour = document.getElementById("hourSelect").value;
   const minute = document.getElementById("minuteSelect").value;
-  await postSettings({ userId, type: "notify", notifyEnabled, notifyTime: `${hour}:${minute}` }, "notify");
+  const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
+    .map(cb => cb.value)
+    .join(",");
+  
+  await postSettings({
+    userId,
+    type: "notify",
+    notifyEnabled,
+    notifyTime: `${hour}:${minute}`,
+    notifyDays
+  }, "notify");
 }
 
 async function saveLaundrySettings() {
