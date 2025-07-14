@@ -318,7 +318,13 @@ async function saveUmbrellaSettings() {
 
 async function postSettings(body, modalType) {
   const statusElem = document.getElementById(`${modalType}SaveStatus`);
+  const modal = document.getElementById(`modal-${modalType}`);
+  const buttons = modal.querySelectorAll(".modal-buttons button");
+
+  // ボタンを無効化
+  buttons.forEach(btn => btn.disabled = true);
   statusElem.innerText = "保存中...";
+
   try {
     const res = await fetch(PROXY_URL, {
       method: "POST",
@@ -326,19 +332,26 @@ async function postSettings(body, modalType) {
       body: JSON.stringify(body)
     });
     const result = await res.json();
+
     if (result.success) {
       statusElem.innerText = "保存完了！";
-      await fetchSettings();
-      setTimeout(() => {
+
+      setTimeout(async () => {
+        await fetchSettings();
         statusElem.innerText = "";
         closeModal(modalType);
+
+        // ボタンを有効化
+        buttons.forEach(btn => btn.disabled = false);
       }, 1500);
     } else {
       statusElem.innerText = "保存失敗";
+      buttons.forEach(btn => btn.disabled = false);
     }
   } catch (e) {
     console.error("保存エラー:", e);
     statusElem.innerText = "保存失敗";
+    buttons.forEach(btn => btn.disabled = false);
   }
 }
 
