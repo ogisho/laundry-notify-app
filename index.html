@@ -213,7 +213,19 @@ async function fetchSettings() {
     const json = await res.json();
     if (!json.success) return;
 
-    const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
+    const { notify, notifyTime, laundryDays, zipcode, umbrellaDays, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
+
+document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
+document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
+document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
+document.getElementById("zipcode").innerText = zipcode !== "--" ? zipcode : "--";
+
+document.getElementById("umbrellaDays").innerText = umbrellaDays !== "--" ? umbrellaDays : "--";
+document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "--" ? umbrellaZip1 : "--";
+document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "--" ? umbrellaZip2 : "--";
+document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
+document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
+document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
 
     // 🚩 新規ユーザーなら最低限登録する（消しちゃいけない大事な部分！）
     if (notify === "--" && notifyTime === "--:--" && notifyDays === "--") {
