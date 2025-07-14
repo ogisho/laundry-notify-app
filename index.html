@@ -147,7 +147,6 @@ async function initializeLiff() {
     const profile = await liff.getProfile();
     userId = profile.userId;
 
-    
     await fetchSettings();
     await showLatestGasUrl();
   } catch (e) {
@@ -161,14 +160,12 @@ function initTimeSelectors() {
   const hourSelect = document.getElementById("hourSelect");
   const minuteSelect = document.getElementById("minuteSelect");
 
-  // 時間（0～23）
   for (let h = 0; h < 24; h++) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = h.toString().padStart(2, "0");
     hourSelect.appendChild(opt);
   }
 
-  // 分（0, 5, 10, ..., 55）
   for (let m = 0; m < 60; m += 5) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = m.toString().padStart(2, "0");
@@ -208,9 +205,8 @@ async function fetchSettings() {
 
     const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
 
-    // 🚩 未登録判定（全部未登録なら新規登録）
+    // 新規ユーザーの場合、最低限登録
     if (notify === "未登録" && notifyTime === "未登録" && notifyDays === "未登録") {
-      console.log("新規ユーザーとして登録します");
       await postSettings({
         userId,
         type: "notify",
@@ -244,12 +240,13 @@ async function saveNotifySettings() {
     type: "notify",
     notifyEnabled,
     notifyTime: `${hour}:${minute}`
-    // ★ 通知メニューでは notifyDays は送らない
   }, "notify");
 }
 
 async function saveLaundrySettings() {
-  const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked")).map(cb => cb.value).join(",");
+  const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
+    .map(cb => cb.value)
+    .join(",");
   const zipcode = document.getElementById("zipcodeInput").value.trim();
 
   await postSettings({
