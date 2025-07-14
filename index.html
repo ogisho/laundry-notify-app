@@ -353,6 +353,36 @@ function openModal(type) {
   }
 }
 
+function openModal(type) {
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.style.display = "flex";
+
+  if (type === "notify") {
+    document.getElementById("modalToggle").checked = (window.notify === "on");
+    const [hour, minute] = (window.notifyTime || "00:00").split(":");
+    document.getElementById("hourSelect").value = hour;
+    document.getElementById("minuteSelect").value = minute;
+  }
+
+  if (type === "laundry") {
+    const days = (window.laundryDays || "").split(",");
+    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+      cb.checked = days.includes(cb.value);
+    });
+    document.getElementById("zipcodeInput").value = window.zipcode || "";
+  }
+
+  if (type === "umbrella") {
+    const days = (window.umbrellaDays || "").split(",");
+    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
+      cb.checked = days.includes(cb.value);
+    });
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`umbrellaZipInput${i}`).value = window[`umbrellaZip${i}`] || "";
+    }
+  }
+}
+
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
