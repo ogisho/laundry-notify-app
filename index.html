@@ -329,6 +329,30 @@ async function postSettings(body, modalType) {
   }
 }
 
+function openModal(type) {
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.style.display = "flex";
+
+  if (type === 'notify') {
+    document.getElementById("modalToggle").checked = (document.getElementById("statusText").innerText === "ON");
+    const [hour, minute] = document.getElementById("notifyTime").innerText.split(":");
+    document.getElementById("hourSelect").value = hour;
+    document.getElementById("minuteSelect").value = minute;
+  }
+  if (type === 'laundry') {
+    const selectedDays = document.getElementById("notifyDays").innerText.split(",");
+    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+      cb.checked = selectedDays.includes(cb.value);
+    });
+  }
+  if (type === 'umbrella') {
+    const selectedDays = document.getElementById("umbrellaDays").innerText.split(",");
+    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
+      cb.checked = selectedDays.includes(cb.value);
+    });
+  }
+}
+
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
