@@ -43,12 +43,6 @@
   <div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;font-size:18px;">
     情報を取得中です...しばらくお待ち下さい。
   </div>
-  <!-- === テストここから === -->
-  <button id="testButton" class="edit-btn" style="margin-bottom: 20px;">テスト実行</button>
-  <div id="testResult" style="white-space: pre-wrap; background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-    （ここにテスト結果が表示されます）
-  </div>
-  <!-- === テストここまで === -->
 
   <h2>通知設定画面</h2>
 
@@ -394,26 +388,6 @@ function openModal(type) {
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
-
-  // === テストここから ===
-  document.getElementById('testButton').addEventListener('click', async () => {
-    const testDiv = document.getElementById('testResult');
-    testDiv.innerText = 'テスト実行中...';
-
-    try {
-      const res = await fetch(`${PROXY_URL}?view=testNotify`);
-      const json = await res.json();
-      if (json.success) {
-        testDiv.innerText = json.result || '結果なし';
-      } else {
-        testDiv.innerText = 'テスト取得失敗';
-      }
-    } catch (e) {
-      console.error('テスト取得エラー:', e);
-      testDiv.innerText = 'テスト取得エラー';
-    }
-  });
-  // === テストここまで ===
 };
   
   
