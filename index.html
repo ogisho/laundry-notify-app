@@ -208,6 +208,17 @@ async function fetchSettings() {
 
     const { notify, notifyTime, notifyDays, zipcode, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5 } = json.data;
 
+    // 🚩 未登録判定（全部未登録なら新規登録）
+    if (notify === "未登録" && notifyTime === "未登録" && notifyDays === "未登録") {
+      console.log("新規ユーザーとして登録します");
+      await postSettings({
+        userId,
+        type: "notify",
+        notifyEnabled: "off",
+        notifyTime: "00:00"
+      }, "notify");
+    }
+
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "未登録" ? notifyTime : "--:--";
     document.getElementById("notifyDays").innerText = notifyDays !== "未登録" ? notifyDays : "--";
