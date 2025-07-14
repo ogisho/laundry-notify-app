@@ -161,12 +161,15 @@ function initTimeSelectors() {
   const hourSelect = document.getElementById("hourSelect");
   const minuteSelect = document.getElementById("minuteSelect");
 
+  // 時間（0～23）
   for (let h = 0; h < 24; h++) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = h.toString().padStart(2, "0");
     hourSelect.appendChild(opt);
   }
-  for (let m = 0; m < 60; m++) {
+
+  // 分（0, 5, 10, ..., 55）
+  for (let m = 0; m < 60; m += 5) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = m.toString().padStart(2, "0");
     minuteSelect.appendChild(opt);
@@ -290,7 +293,10 @@ async function postSettings(body, modalType) {
   }
 }
 
-window.onload = () => initializeLiff();
+window.onload = () => {
+  initTimeSelectors();
+  initializeLiff();
+};
 </script>
 </body>
 </html>
