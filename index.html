@@ -199,6 +199,32 @@ async function showLatestGasUrl() {
 function openModal(type) {
   const modal = document.getElementById(`modal-${type}`);
   if (modal) modal.style.display = "flex";
+
+  // 編集モーダル初期値セット（チェックボックス）
+  if (type === 'laundry') {
+    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+      cb.checked = window.laundryDays.includes(cb.value);
+    });
+    document.getElementById("zipcodeInput").value = window.zipcode || "";
+  }
+
+  if (type === 'umbrella') {
+    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
+      cb.checked = window.umbrellaDays.includes(cb.value);
+    });
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`umbrellaZipInput${i}`).value = window[`umbrellaZip${i}`] || "";
+    }
+  }
+
+  if (type === 'notify') {
+    document.getElementById("modalToggle").checked = window.notify === 'on';
+    if (window.notifyTime && window.notifyTime.includes(":")) {
+      const [h, m] = window.notifyTime.split(":");
+      document.getElementById("hourSelect").value = h;
+      document.getElementById("minuteSelect").value = m;
+    }
+  }
 }
 
 function closeModal(type) {
@@ -221,36 +247,57 @@ async function fetchSettings() {
       notifyTime,
       laundryDays,
       zipcode,
+      laundryAddress,
       umbrellaDays,
       umbrellaZip1,
       umbrellaZip2,
       umbrellaZip3,
       umbrellaZip4,
-      umbrellaZip5
+      umbrellaZip5,
+      umbrellaAddress1,
+      umbrellaAddress2,
+      umbrellaAddress3,
+      umbrellaAddress4,
+      umbrellaAddress5
     } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
     document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
-    document.getElementById("zipcode").innerText = zipcode !== "--" ? zipcode : "--";
 
-    document.getElementById("umbrellaDays").innerText = umbrellaDays !== "--" ? umbrellaDays : "--";
-    document.getElementById("umbrellaZip1").innerText = umbrellaZip1 !== "--" ? umbrellaZip1 : "--";
-    document.getElementById("umbrellaZip2").innerText = umbrellaZip2 !== "--" ? umbrellaZip2 : "--";
-    document.getElementById("umbrellaZip3").innerText = umbrellaZip3 !== "--" ? umbrellaZip3 : "--";
-    document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
-    document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
+    // 郵便番号（住所）形式表示
+    document.getElementById("zipcode").innerText =
+      (zipcode !== "--" ? `${zipcode}（${laundryAddress || "--"}）` : "--");
 
+    const umbrellaZips = [umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5];
+    const umbrellaAddresses = [umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5];
+
+    for (let i = 0; i < 5; i++) {
+      const zipElem = document.getElementById(`umbrellaZip${i + 1}`);
+      if (umbrellaZips[i] && umbrellaZips[i] !== "--") {
+        zipElem.innerText = `${umbrellaZips[i]}（${umbrellaAddresses[i] || "--"}）`;
+      } else {
+        zipElem.innerText = "--";
+      }
+    }
+
+    // 保存用グローバル
     window.notify = notify;
     window.notifyTime = notifyTime;
     window.laundryDays = laundryDays;
     window.zipcode = zipcode;
+    window.laundryAddress = laundryAddress;
     window.umbrellaDays = umbrellaDays;
     window.umbrellaZip1 = umbrellaZip1;
     window.umbrellaZip2 = umbrellaZip2;
     window.umbrellaZip3 = umbrellaZip3;
     window.umbrellaZip4 = umbrellaZip4;
     window.umbrellaZip5 = umbrellaZip5;
+    window.umbrellaAddress1 = umbrellaAddress1;
+    window.umbrellaAddress2 = umbrellaAddress2;
+    window.umbrellaAddress3 = umbrellaAddress3;
+    window.umbrellaAddress4 = umbrellaAddress4;
+    window.umbrellaAddress5 = umbrellaAddress5;
 
   } catch (e) {
     console.error("設定取得エラー:", e);
