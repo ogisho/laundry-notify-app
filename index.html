@@ -211,31 +211,23 @@ async function fetchSettings() {
     const url = `${PROXY_URL}?userId=${userId}`;
     const res = await fetch(url);
     const json = await res.json();
-    if (!json.success) return;
+    if (!json.success) {
+      alert(json.message || "設定取得失敗");
+      return;
+    }
 
     const {
       notify,
       notifyTime,
-      notifyDays,
-      laundryDays,        // ← 洗濯曜日
+      laundryDays,
       zipcode,
-      umbrellaDays,       // ← 傘曜日
+      umbrellaDays,
       umbrellaZip1,
       umbrellaZip2,
       umbrellaZip3,
       umbrellaZip4,
       umbrellaZip5
     } = json.data;
-
-    if (notify === "--" && notifyTime === "--:--" && notifyDays === "--") {
-      console.log("新規ユーザー検知、初期登録を実行します");
-      await postSettings({
-        userId,
-        type: "notify",
-        notifyEnabled: "off",
-        notifyTime: "00:00"
-      }, "notify");
-    }
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
@@ -249,7 +241,6 @@ async function fetchSettings() {
     document.getElementById("umbrellaZip4").innerText = umbrellaZip4 !== "--" ? umbrellaZip4 : "--";
     document.getElementById("umbrellaZip5").innerText = umbrellaZip5 !== "--" ? umbrellaZip5 : "--";
 
-    // ✅ 追加: window変数に保存
     window.notify = notify;
     window.notifyTime = notifyTime;
     window.laundryDays = laundryDays;
@@ -263,6 +254,7 @@ async function fetchSettings() {
 
   } catch (e) {
     console.error("設定取得エラー:", e);
+    alert("設定取得エラーが発生しました");
   }
 }
 
@@ -307,7 +299,7 @@ async function saveUmbrellaSettings() {
   await postSettings({
     userId,
     type: "umbrella",
-    umbrellaDays,                          // ← 追加
+    umbrellaDays,
     umbrellaZip1: umbrellaZips[0] || "",
     umbrellaZip2: umbrellaZips[1] || "",
     umbrellaZip3: umbrellaZips[2] || "",
@@ -321,7 +313,6 @@ async function postSettings(body, modalType) {
   const modal = document.getElementById(`modal-${modalType}`);
   const buttons = modal.querySelectorAll(".modal-buttons button");
 
-  // ボタンを無効化
   buttons.forEach(btn => btn.disabled = true);
   statusElem.innerText = "保存中...";
 
@@ -335,53 +326,22 @@ async function postSettings(body, modalType) {
 
     if (result.success) {
       statusElem.innerText = "保存完了！";
-
       setTimeout(async () => {
         await fetchSettings();
         statusElem.innerText = "";
         closeModal(modalType);
-
-        // ボタンを有効化
         buttons.forEach(btn => btn.disabled = false);
       }, 1500);
     } else {
-      statusElem.innerText = "保存失敗";
+      statusElem.innerText = result.message || "保存失敗";
+      alert(result.message || "保存失敗");
       buttons.forEach(btn => btn.disabled = false);
     }
   } catch (e) {
     console.error("保存エラー:", e);
     statusElem.innerText = "保存失敗";
+    alert("保存エラーが発生しました");
     buttons.forEach(btn => btn.disabled = false);
-  }
-}
-
-function openModal(type) {
-  const modal = document.getElementById(`modal-${type}`);
-  if (modal) modal.style.display = "flex";
-
-  if (type === "notify") {
-    document.getElementById("modalToggle").checked = (window.notify === "on");
-    const [hour, minute] = (window.notifyTime || "00:00").split(":");
-    document.getElementById("hourSelect").value = hour;
-    document.getElementById("minuteSelect").value = minute;
-  }
-
-  if (type === "laundry") {
-    const days = (window.laundryDays || "").split(",");
-    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
-      cb.checked = days.includes(cb.value);
-    });
-    document.getElementById("zipcodeInput").value = window.zipcode || "";
-  }
-
-  if (type === "umbrella") {
-    const days = (window.umbrellaDays || "").split(",");
-    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
-      cb.checked = days.includes(cb.value);
-    });
-    for (let i = 1; i <= 5; i++) {
-      document.getElementById(`umbrellaZipInput${i}`).value = window[`umbrellaZip${i}`] || "";
-    }
   }
 }
 
@@ -389,9 +349,6 @@ window.onload = () => {
   initTimeSelectors();
   initializeLiff();
 };
-  
-  
-
 </script>
 </body>
 </html>
