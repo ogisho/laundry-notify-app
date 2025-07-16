@@ -203,20 +203,22 @@ function openModal(type) {
 
   // 編集モーダル初期値セット（チェックボックス）
   if (type === 'laundry') {
-    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
-      cb.checked = window.laundryDays.includes(cb.value);
-    });
-    document.getElementById("zipcodeInput").value = window.zipcode || "";
-  }
+  const laundryDaysArray = (window.laundryDays || "").split(",");
+  document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+    cb.checked = laundryDaysArray.includes(cb.value);
+  });
+  document.getElementById("zipcodeInput").value = window.zipcode || "";
+}
 
   if (type === 'umbrella') {
-    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
-      cb.checked = window.umbrellaDays.includes(cb.value);
-    });
-    for (let i = 1; i <= 5; i++) {
-      document.getElementById(`umbrellaZipInput${i}`).value = window[`umbrellaZip${i}`] || "";
-    }
+  const umbrellaDaysArray = (window.umbrellaDays || "").split(",");
+  document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
+    cb.checked = umbrellaDaysArray.includes(cb.value);
+  });
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById(`umbrellaZipInput${i}`).value = window[`umbrellaZip${i}`] || "";
   }
+}
 
   if (type === 'notify') {
     document.getElementById("modalToggle").checked = window.notify === 'on';
