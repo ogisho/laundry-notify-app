@@ -202,25 +202,24 @@ function openModal(type) {
   if (modal) modal.style.display = "flex";
 
   if (type === 'laundry') {
-  const laundryDaysArray = (window.laundryDays || "").split(",");
-  const isAllDays = !laundryDaysArray[0] || laundryDaysArray[0] === '--';
-  document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
-    cb.checked = isAllDays || laundryDaysArray.includes(cb.value);
-  });
-  document.getElementById("zipcodeInput").value = (window.zipcode !== '--') ? window.zipcode : '';
-}
-
-if (type === 'umbrella') {
-  const umbrellaDaysArray = (window.umbrellaDays || "").split(",");
-  const isAllDays = !umbrellaDaysArray[0] || umbrellaDaysArray[0] === '--';
-  document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
-    cb.checked = isAllDays || umbrellaDaysArray.includes(cb.value);
-  });
-  for (let i = 1; i <= 5; i++) {
-    const val = window[`umbrellaZip${i}`];
-    document.getElementById(`umbrellaZipInput${i}`).value = (val && val !== '--') ? val : '';
+    const laundryDaysArray = (window.laundryDays || "").split(",");
+    const isAllDays = !window.laundryDays || laundryDaysArray.length === 0 || laundryDaysArray[0] === '--';
+    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+      cb.checked = isAllDays || laundryDaysArray.includes(cb.value);
+    });
+    document.getElementById("zipcodeInput").value = (window.zipcode !== '--') ? window.zipcode : '';
   }
-}
+
+  if (type === 'umbrella') {
+    const umbrellaDaysArray = (window.umbrellaDays || "").split(",");
+    const isAllDays = !window.umbrellaDays || umbrellaDaysArray.length === 0 || umbrellaDaysArray[0] === '--';
+    document.querySelectorAll("#modal-umbrella input[type=checkbox]").forEach(cb => {
+      cb.checked = isAllDays || umbrellaDaysArray.includes(cb.value);
+    });
+    for (let i = 1; i <= 5; i++) {
+      const val = window[`umbrellaZip${i}`];
+      document.getElementById(`umbrellaZipInput${i}`).value = (val && val !== '--') ? val : '';
+    }
   }
 
   if (type === 'notify') {
@@ -270,8 +269,6 @@ async function fetchSettings() {
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
     document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
-
-    // ✅ 傘通知の曜日表示を追加
     document.getElementById("umbrellaDays").innerText = umbrellaDays !== "--" ? umbrellaDays : "--";
 
     document.getElementById("zipcode").innerText =
