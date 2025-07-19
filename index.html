@@ -154,7 +154,11 @@ let userId = "";
 async function initializeLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) liff.login();
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      document.getElementById('loading').style.display = 'none'; // リダイレクト前に必ずloading非表示
+      return;
+    }
     const profile = await liff.getProfile();
     userId = profile.userId;
 
@@ -162,6 +166,7 @@ async function initializeLiff() {
     await showLatestGasUrl();
   } catch (e) {
     console.error("LIFF初期化エラー:", e);
+    alert(`LIFFエラー: ${e.message || e}`);
   } finally {
     document.getElementById('loading').style.display = 'none';
   }
