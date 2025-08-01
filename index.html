@@ -80,6 +80,21 @@
     <div class="row"><span>⑤郵便番号：</span><span id="umbrellaZip5">--</span></div>
   </div>
 
+  
+  <!-- 路線通知 -->
+<div class="card">
+  <div class="section-title">
+    路線通知
+    <button class="edit-btn" onclick="openModal('train')">編集</button>
+  </div>
+  <div class="row"><span>①路線：</span><span id="train1">--</span></div>
+  <div class="row"><span>②路線：</span><span id="train2">--</span></div>
+  <div class="row"><span>③路線：</span><span id="train3">--</span></div>
+  <div class="row"><span>④路線：</span><span id="train4">--</span></div>
+  <div class="row"><span>⑤路線：</span><span id="train5">--</span></div>
+</div>
+
+
   <!-- モーダル: 通知メニュー -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
@@ -145,6 +160,23 @@
     </div>
   </div>
 </body>
+
+<!-- モーダル: 路線通知 -->
+<div class="modal" id="modal-train">
+  <div class="modal-content">
+    <h3>路線通知の編集</h3>
+    <label>①路線：<input type="text" id="trainInput1" placeholder="例: 東海道線"></label><br>
+    <label>②路線：<input type="text" id="trainInput2"></label><br>
+    <label>③路線：<input type="text" id="trainInput3"></label><br>
+    <label>④路線：<input type="text" id="trainInput4"></label><br>
+    <label>⑤路線：<input type="text" id="trainInput5"></label>
+    <p class="save-status" id="trainSaveStatus"></p>
+    <div class="modal-buttons">
+      <button onclick="closeModal('train')">キャンセル</button>
+      <button onclick="saveTrainSettings()">保存</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
