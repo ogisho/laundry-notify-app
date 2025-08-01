@@ -396,6 +396,24 @@ async function saveUmbrellaSettings() {
   }, "umbrella");
 }
 
+  async function saveTrainSettings() {
+  const trains = [];
+  for (let i = 1; i <= 5; i++) {
+    const val = document.getElementById(`trainInput${i}`).value.trim();
+    if (val) trains.push(val);
+  }
+
+  await postSettings({
+    userId,
+    type: "train",
+    train1: trains[0] || "",
+    train2: trains[1] || "",
+    train3: trains[2] || "",
+    train4: trains[3] || "",
+    train5: trains[4] || ""
+  }, "train");
+}
+
 async function postSettings(body, modalType) {
   const statusElem = document.getElementById(`${modalType}SaveStatus`);
   const modal = document.getElementById(`modal-${modalType}`);
