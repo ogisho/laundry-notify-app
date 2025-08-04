@@ -39,15 +39,15 @@
     .error-message { color: red; display: none; }
     #currentUrlDisplay { margin-top: 20px; font-size: 12px; color: red; }
     .edit-btn {
-  background-color: #007bff !important;
-  color: #fff !important;
-  border: none !important;
-  padding: 6px 12px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  z-index: 10 !important;
-  position: relative !important;
-}
+      background-color: #007bff !important;
+      color: #fff !important;
+      border: none !important;
+      padding: 6px 12px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      z-index: 10 !important;
+      position: relative !important;
+    }
   </style>
 </head>
 <body>
@@ -68,13 +68,13 @@
   </div>
 
   <!-- プッシュ通知 -->
-<div class="card">
-  <div class="section-title">
-    プッシュ通知
-    <button class="edit-btn" onclick="registerPushSubscription()">有効化</button>
+  <div class="card" id="pushCard">
+    <div class="section-title">
+      プッシュ通知
+      <button class="edit-btn" onclick="registerPushSubscription()">有効化</button>
+    </div>
+    <div class="row"><span id="pushStatus">未登録</span></div>
   </div>
-  <div class="row"><span id="pushStatus">未登録</span></div>
-</div>
 
   <!-- 洗濯指数 -->
   <div class="card">
@@ -100,21 +100,20 @@
     <div class="row"><span>⑤郵便番号：</span><span id="umbrellaZip5">--</span></div>
   </div>
 
-  
   <!-- 路線通知 -->
-<div class="card">
-  <div class="section-title">
-    路線通知
-    <button class="edit-btn" onclick="openModal('train')">編集</button>
+  <div class="card">
+    <div class="section-title">
+      路線通知
+      <button class="edit-btn" onclick="openModal('train')">編集</button>
+    </div>
+    <div class="row"><span>①路線：</span><span id="train1">--</span></div>
+    <div class="row"><span>②路線：</span><span id="train2">--</span></div>
+    <div class="row"><span>③路線：</span><span id="train3">--</span></div>
+    <div class="row"><span>④路線：</span><span id="train4">--</span></div>
+    <div class="row"><span>⑤路線：</span><span id="train5">--</span></div>
   </div>
-  <div class="row"><span>①路線：</span><span id="train1">--</span></div>
-  <div class="row"><span>②路線：</span><span id="train2">--</span></div>
-  <div class="row"><span>③路線：</span><span id="train3">--</span></div>
-  <div class="row"><span>④路線：</span><span id="train4">--</span></div>
-  <div class="row"><span>⑤路線：</span><span id="train5">--</span></div>
-</div>
 
-
+  <!-- （モーダルは省略せず現状通り全部残す） -->
   <!-- モーダル: 通知メニュー -->
   <div class="modal" id="modal-notify">
     <div class="modal-content">
@@ -179,6 +178,23 @@
       </div>
     </div>
   </div>
+
+  <!-- モーダル: 路線通知 -->
+  <div class="modal" id="modal-train">
+    <div class="modal-content">
+      <h3>路線通知の編集</h3>
+      <label>①路線：<input type="text" id="trainInput1" placeholder="例: 東海道線"></label><br>
+      <label>②路線：<input type="text" id="trainInput2"></label><br>
+      <label>③路線：<input type="text" id="trainInput3"></label><br>
+      <label>④路線：<input type="text" id="trainInput4"></label><br>
+      <label>⑤路線：<input type="text" id="trainInput5"></label>
+      <p class="save-status" id="trainSaveStatus"></p>
+      <div class="modal-buttons">
+        <button onclick="closeModal('train')">キャンセル</button>
+        <button onclick="saveTrainSettings()">保存</button>
+      </div>
+    </div>
+  </div>
 </body>
 
 <!-- モーダル: 路線通知 -->
@@ -213,7 +229,7 @@ async function initializeLiff() {
     await liff.init({ liffId: LIFF_ID });
     if (!liff.isLoggedIn()) {
       liff.login();
-      document.getElementById('loading').style.display = 'none'; // リダイレクト前に必ずloading非表示
+      document.getElementById('loading').style.display = 'none'; 
       return;
     }
     const profile = await liff.getProfile();
@@ -232,13 +248,11 @@ async function initializeLiff() {
 function initTimeSelectors() {
   const hourSelect = document.getElementById("hourSelect");
   const minuteSelect = document.getElementById("minuteSelect");
-
   for (let h = 0; h < 24; h++) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = h.toString().padStart(2, "0");
     hourSelect.appendChild(opt);
   }
-
   for (let m = 0; m < 60; m += 5) {
     const opt = document.createElement("option");
     opt.value = opt.textContent = m.toString().padStart(2, "0");
@@ -325,7 +339,8 @@ async function fetchSettings() {
       umbrellaAddress2,
       umbrellaAddress3,
       umbrellaAddress4,
-      umbrellaAddress5
+      umbrellaAddress5,
+      fcmSubscribed
     } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
@@ -338,7 +353,6 @@ async function fetchSettings() {
 
     const umbrellaZips = [umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5];
     const umbrellaAddresses = [umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5];
-
     for (let i = 0; i < 5; i++) {
       const zipElem = document.getElementById(`umbrellaZip${i + 1}`);
       if (umbrellaZips[i] && umbrellaZips[i] !== "--") {
@@ -364,6 +378,11 @@ async function fetchSettings() {
     window.umbrellaAddress3 = umbrellaAddress3;
     window.umbrellaAddress4 = umbrellaAddress4;
     window.umbrellaAddress5 = umbrellaAddress5;
+
+    // ✅ fcmSubscribed が true の場合はプッシュ通知カードを非表示にする
+    if (fcmSubscribed) {
+      document.getElementById("pushCard").style.display = "none";
+    }
 
   } catch (e) {
     console.error("設定取得エラー:", e);
@@ -421,7 +440,7 @@ async function saveUmbrellaSettings() {
   }, "umbrella");
 }
 
-  async function saveTrainSettings() {
+async function saveTrainSettings() {
   const trains = [];
   for (let i = 1; i <= 5; i++) {
     const val = document.getElementById(`trainInput${i}`).value.trim();
@@ -493,7 +512,7 @@ async function registerPushSubscription() {
   const reg = await navigator.serviceWorker.ready;
   const subscription = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s" // ←ここはフルの公開鍵
+    applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
   });
 
   try {
@@ -508,16 +527,19 @@ async function registerPushSubscription() {
     });
     console.log("購読トークンをGASへ送信しました:", subscription);
     document.getElementById("pushStatus").innerText = "登録完了！";
+
+    // ✅ 登録完了後はUIごと非表示
+    document.getElementById("pushCard").style.display = "none";
+
   } catch (e) {
     console.error("購読情報の送信失敗:", e);
     document.getElementById("pushStatus").innerText = "登録失敗";
   }
 }
 
-  
 window.onload = () => {
   initTimeSelectors();
-  initializeLiff();  // ←これで「情報取得中… → 設定取得」の流れは維持される
+  initializeLiff();
 };
 </script>
 </body>
