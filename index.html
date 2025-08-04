@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json">
   <title>通知設定画面</title>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <style>
@@ -179,6 +180,11 @@
 </div>
 
 <script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch(err => console.error("SW registration failed:", err));
+}
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
