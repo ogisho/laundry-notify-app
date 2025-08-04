@@ -57,6 +57,15 @@
     <div class="row"><span>通知時間：</span><span id="notifyTime">--:--</span></div>
   </div>
 
+  <!-- プッシュ通知 -->
+<div class="card">
+  <div class="section-title">
+    プッシュ通知
+    <button class="edit-btn" onclick="registerPushSubscription()">有効化</button>
+  </div>
+  <div class="row"><span id="pushStatus">未登録</span></div>
+</div>
+
   <!-- 洗濯指数 -->
   <div class="card">
     <div class="section-title">
@@ -467,16 +476,16 @@ async function registerPushSubscription() {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
     console.warn("通知が許可されませんでした");
+    document.getElementById("pushStatus").innerText = "通知が許可されませんでした";
     return;
   }
 
   const reg = await navigator.serviceWorker.ready;
   const subscription = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s" // Firebase VAPID 公開鍵
+    applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s" // ←ここはフルの公開鍵
   });
 
-  // GASへ購読情報を送信してシートのC列に保存
   try {
     await fetch(PROXY_URL, {
       method: "POST",
@@ -488,18 +497,17 @@ async function registerPushSubscription() {
       })
     });
     console.log("購読トークンをGASへ送信しました:", subscription);
+    document.getElementById("pushStatus").innerText = "登録完了！";
   } catch (e) {
     console.error("購読情報の送信失敗:", e);
+    document.getElementById("pushStatus").innerText = "登録失敗";
   }
 }
 
   
-  
 window.onload = () => {
   initTimeSelectors();
-  initializeLiff().then(() => {
-    registerPushSubscription(); // LIFF初期化後に購読処理を実行
-  });
+  initializeLiff();  // ←これで「情報取得中… → 設定取得」の流れは維持される
 };
 </script>
 </body>
