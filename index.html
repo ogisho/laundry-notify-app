@@ -197,23 +197,6 @@
   </div>
 </body>
 
-<!-- モーダル: 路線通知 -->
-<div class="modal" id="modal-train">
-  <div class="modal-content">
-    <h3>路線通知の編集</h3>
-    <label>①路線：<input type="text" id="trainInput1" placeholder="例: 東海道線"></label><br>
-    <label>②路線：<input type="text" id="trainInput2"></label><br>
-    <label>③路線：<input type="text" id="trainInput3"></label><br>
-    <label>④路線：<input type="text" id="trainInput4"></label><br>
-    <label>⑤路線：<input type="text" id="trainInput5"></label>
-    <p class="save-status" id="trainSaveStatus"></p>
-    <div class="modal-buttons">
-      <button onclick="closeModal('train')">キャンセル</button>
-      <button onclick="saveTrainSettings()">保存</button>
-    </div>
-  </div>
-</div>
-
 <script>
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/service-worker.js")
