@@ -197,6 +197,33 @@
   </div>
 </body>
 
+<script type="module">
+// === セクション0: Firebase 初期化 ===
+// Firebase SDK を読み込んでアプリを初期化する処理
+
+// 0-1: Firebase モジュールの読み込み
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+// 今後通知で使うために messaging を import
+import { getMessaging } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
+
+// 0-2: Firebase の設定
+const firebaseConfig = {
+  apiKey: "AIzaSyCA1s7R1DCYyTkU9Hm_9F3GvgD6j95oD4o",
+  authDomain: "pushnotification-4395c.firebaseapp.com",
+  projectId: "pushnotification-4395c",
+  storageBucket: "pushnotification-4395c.firebasestorage.app",
+  messagingSenderId: "656011398931",
+  appId: "1:656011398931:web:527ddfc508a5f88f9cd4e6"
+};
+
+// 0-3: Firebase アプリを初期化
+const app = initializeApp(firebaseConfig);
+
+// 0-4: Messaging インスタンスを作成
+const messaging = getMessaging(app);
+
+</script>
+
 <script>
 // === セクション1: Service Worker 登録 & 定数定義 ===
 
