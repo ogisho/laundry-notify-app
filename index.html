@@ -583,11 +583,13 @@ async function postSettings(body, modalType) {
 
 
 // === セクション5: FCM購読処理 ===
+import { getToken } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
+
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
   statusElem.innerText = "送信中...";
 
-  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+  if (!("Notification" in window)) {
     statusElem.innerText = "未対応ブラウザ";
     return;
   }
@@ -599,33 +601,37 @@ async function registerPushSubscription() {
   }
 
   try {
-    const reg = await navigator.serviceWorker.ready;
-    const vapidKey = "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s";
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey)
+    // 🔑 Firebase から FCM トークンを取得
+    const fcmToken = await getToken(messaging, {
+      vapidKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
     });
 
-    // 5-1: FCM ID をモーダルで表示
-    showFcmIdModal(subscription.endpoint);
+    if (!fcmToken) {
+      statusElem.innerText = "トークン取得失敗";
+      return;
+    }
 
+    // 5-1: FCM トークンをモーダルで表示
+    showFcmIdModal(fcmToken);
+
+    // 5-2: GASへ送信
     const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId,
         type: "fcm",
-        subscription
+        token: fcmToken
       })
     });
     const result = await res.json();
 
     if (result.success) {
-      console.log("購読トークンをGASへ送信しました:", subscription);
+      console.log("✅ FCMトークンをGASへ送信しました:", fcmToken);
       statusElem.innerText = "登録完了！";
       document.getElementById("pushCard").style.display = "none";
     } else {
-      console.error("GASから失敗応答:", result);
+      console.error("❌ GASから失敗応答:", result);
       statusElem.innerText = "登録失敗";
     }
 
