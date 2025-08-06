@@ -228,8 +228,12 @@ const messaging = getMessaging(app);
 // 1-1: Service Worker 登録
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/firebase-messaging-sw.js")
-    .then(() => console.log("Firebase Messaging SW registered"))
-    .catch(err => console.error("SW registration failed:", err));
+    .then(() => {
+      document.getElementById("pushStatus").innerText = "SW登録成功！";
+    })
+    .catch(err => {
+      document.getElementById("pushStatus").innerText = "SW登録失敗: " + err.message;
+    });
 }
 
 // 1-2: 定数定義
@@ -579,7 +583,7 @@ async function postSettings(body, modalType) {
 // === セクション5: FCM購読処理 ===
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
-  statusElem.innerText = "送信中...";
+  statusElem.innerText = "ボタン反応あり！";
 
   if (!("Notification" in window)) {
     statusElem.innerText = "未対応ブラウザ";
