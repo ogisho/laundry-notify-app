@@ -210,15 +210,42 @@ let userId = "";
 // ✅ VAPIDキーをUint8Arrayに変換する関数
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, "+")
-    .replace(/_/g, "/");
+  const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+// ✅ FCM ID をモーダル表示する関数
+function showFcmIdModal(fcmId) {
+  const modal = document.createElement("div");
+  modal.id = "fcmIdModal";
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.right = "0";
+  modal.style.bottom = "0";
+  modal.style.background = "rgba(0,0,0,0.5)";
+  modal.style.display = "flex";
+  modal.style.alignItems = "center";
+  modal.style.justifyContent = "center";
+  modal.style.zIndex = "5000";
+
+  modal.innerHTML = `
+    <div style="background:#fff;padding:20px;border-radius:10px;max-width:400px;text-align:center;">
+      <h3>FCM ID</h3>
+      <p style="word-break:break-all;font-size:12px;color:#333;">${fcmId}</p>
+      <button id="closeFcmIdBtn" style="margin-top:10px;padding:6px 12px;">OK</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.getElementById("closeFcmIdBtn").onclick = () => {
+    document.body.removeChild(modal);
+  };
 }
 
 async function initializeLiff() {
@@ -495,29 +522,29 @@ async function postSettings(body, modalType) {
 // ===== FCM購読処理 =====
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
-  statusElem.innerText = "送信中..."; // ✅ ボタン押した直後に表示
+  statusElem.innerText = "送信中...";
 
   if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-    console.warn("このブラウザはPush通知をサポートしていません");
     statusElem.innerText = "未対応ブラウザ";
     return;
   }
 
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
-    console.warn("通知が許可されませんでした");
     statusElem.innerText = "通知が許可されませんでした";
     return;
   }
 
   try {
     const reg = await navigator.serviceWorker.ready;
-    // ✅ VAPIDキーをUint8Arrayに変換して渡す
     const vapidKey = "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s";
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey)
     });
+
+    // ✅ FCM ID をモーダルで表示
+    showFcmIdModal(subscription.endpoint);
 
     const res = await fetch(PROXY_URL, {
       method: "POST",
@@ -533,7 +560,6 @@ async function registerPushSubscription() {
     if (result.success) {
       console.log("購読トークンをGASへ送信しました:", subscription);
       statusElem.innerText = "登録完了！";
-      // ✅ 登録完了後はUIごと非表示
       document.getElementById("pushCard").style.display = "none";
     } else {
       console.error("GASから失敗応答:", result);
