@@ -1,0 +1,9 @@
+{
+  "name": "WeatherNotify",
+  "short_name": "WeatherNotify",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3",
+  "gcm_sender_id": "103953800507"
+}
