@@ -203,8 +203,8 @@
 
 // 0-1: Firebase モジュールの読み込み
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-// 今後通知で使うために messaging を import
-import { getMessaging } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
+// 今後通知で使うために messaging と getToken を import
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
 
 // 0-2: Firebase の設定
 const firebaseConfig = {
@@ -221,6 +221,7 @@ const app = initializeApp(firebaseConfig);
 
 // 0-4: Messaging インスタンスを作成
 const messaging = getMessaging(app);
+
 
 // === セクション1: Service Worker 登録 & 定数定義 ===
 
@@ -257,9 +258,7 @@ function showFcmIdModal(fcmId) {
 
   // 既にモーダルがある場合は削除してから再作成
   const oldModal = document.getElementById("fcmIdModal");
-  if (oldModal) {
-    oldModal.remove();
-  }
+  if (oldModal) oldModal.remove();
 
   const modal = document.createElement("div");
   modal.id = "fcmIdModal";
@@ -285,9 +284,7 @@ function showFcmIdModal(fcmId) {
 
   document.body.appendChild(modal);
 
-  document.getElementById("closeFcmIdBtn").onclick = () => {
-    modal.remove();
-  };
+  document.getElementById("closeFcmIdBtn").onclick = () => modal.remove();
 }
 
 
@@ -580,8 +577,6 @@ async function postSettings(body, modalType) {
 
 
 // === セクション5: FCM購読処理 ===
-import { getToken } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
-
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
   statusElem.innerText = "送信中...";
