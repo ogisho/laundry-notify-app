@@ -207,6 +207,20 @@ const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
 
+// ✅ VAPIDキーをUint8Arrayに変換する関数
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 async function initializeLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
@@ -498,9 +512,11 @@ async function registerPushSubscription() {
 
   try {
     const reg = await navigator.serviceWorker.ready;
+    // ✅ VAPIDキーをUint8Arrayに変換して渡す
+    const vapidKey = "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s";
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
+      applicationServerKey: urlBase64ToUint8Array(vapidKey)
     });
 
     const res = await fetch(PROXY_URL, {
@@ -520,6 +536,7 @@ async function registerPushSubscription() {
       // ✅ 登録完了後はUIごと非表示
       document.getElementById("pushCard").style.display = "none";
     } else {
+      console.error("GASから失敗応答:", result);
       statusElem.innerText = "登録失敗";
     }
 
