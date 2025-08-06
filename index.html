@@ -228,8 +228,12 @@ const messaging = getMessaging(app);
 // 1-1: Service Worker 登録
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/firebase-messaging-sw.js")
-    .then(() => {
+    .then(async () => {
       document.getElementById("pushStatus").innerText = "SW登録成功！";
+
+      // ★ ここで権限を即チェック
+      const permission = await Notification.requestPermission();
+      document.getElementById("pushStatus").innerText += " / 権限: " + permission;
     })
     .catch(err => {
       document.getElementById("pushStatus").innerText = "SW登録失敗: " + err.message;
