@@ -598,7 +598,7 @@ async function registerPushSubscription() {
     statusElem.innerText = "FCMトークン取得中...";
 
     const fcmToken = await getToken(messaging, {
-      vapidKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
+      vapidKey: "BMEFvx-S7anDcctuAiffHux0Jqhb9C0pKLjMwqPxWhuXxveYV8UD36QIrxrKltN4SdSAY2nR0h1hsEH7nZebV3E"
     });
 
     statusElem.innerText = "FCMトークン: " + (fcmToken || "null");
