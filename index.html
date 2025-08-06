@@ -227,8 +227,8 @@ const messaging = getMessaging(app);
 
 // 1-1: Service Worker 登録
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js")
-    .then(() => console.log("Service Worker registered"))
+  navigator.serviceWorker.register("/firebase-messaging-sw.js")
+    .then(() => console.log("Firebase Messaging SW registered"))
     .catch(err => console.error("SW registration failed:", err));
 }
 
