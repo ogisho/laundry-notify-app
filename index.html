@@ -580,33 +580,37 @@ async function postSettings(body, modalType) {
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
   statusElem.innerText = "送信中...";
+  console.log("▶️ registerPushSubscription 開始");
 
   if (!("Notification" in window)) {
     statusElem.innerText = "未対応ブラウザ";
+    console.log("❌ Notification未対応");
     return;
   }
 
   const permission = await Notification.requestPermission();
+  console.log("▶️ Notification permission:", permission);
   if (permission !== "granted") {
     statusElem.innerText = "通知が許可されませんでした";
     return;
   }
 
   try {
-    // 🔑 Firebase から FCM トークンを取得
+    console.log("▶️ FCMトークン取得開始");
     const fcmToken = await getToken(messaging, {
       vapidKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
     });
+
+    console.log("▶️ fcmToken:", fcmToken);
 
     if (!fcmToken) {
       statusElem.innerText = "トークン取得失敗";
       return;
     }
 
-    // 5-1: FCM トークンをモーダルで表示
     showFcmIdModal(fcmToken);
 
-    // 5-2: GASへ送信
+    console.log("▶️ GASへ送信開始");
     const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -617,9 +621,10 @@ async function registerPushSubscription() {
       })
     });
     const result = await res.json();
+    console.log("▶️ GASからの応答:", result);
 
     if (result.success) {
-      console.log("✅ FCMトークンをGASへ送信しました:", fcmToken);
+      console.log("✅ 登録成功");
       statusElem.innerText = "登録完了！";
       document.getElementById("pushCard").style.display = "none";
     } else {
