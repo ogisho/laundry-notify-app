@@ -580,61 +580,52 @@ async function postSettings(body, modalType) {
 async function registerPushSubscription() {
   const statusElem = document.getElementById("pushStatus");
   statusElem.innerText = "送信中...";
-  console.log("▶️ registerPushSubscription 開始");
 
   if (!("Notification" in window)) {
     statusElem.innerText = "未対応ブラウザ";
-    console.log("❌ Notification未対応");
     return;
   }
 
   const permission = await Notification.requestPermission();
-  console.log("▶️ Notification permission:", permission);
+  statusElem.innerText = "権限: " + permission;   // ← ここでUIに表示
+
   if (permission !== "granted") {
     statusElem.innerText = "通知が許可されませんでした";
     return;
   }
 
   try {
-    console.log("▶️ FCMトークン取得開始");
+    statusElem.innerText = "FCMトークン取得中...";
+
     const fcmToken = await getToken(messaging, {
       vapidKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
     });
 
-    console.log("▶️ fcmToken:", fcmToken);
+    statusElem.innerText = "FCMトークン: " + (fcmToken || "null");
 
     if (!fcmToken) {
       statusElem.innerText = "トークン取得失敗";
       return;
     }
 
-    showFcmIdModal(fcmToken);
-
-    console.log("▶️ GASへ送信開始");
     const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        type: "fcm",
-        token: fcmToken
-      })
+      body: JSON.stringify({ userId, type: "fcm", token: fcmToken })
     });
     const result = await res.json();
-    console.log("▶️ GASからの応答:", result);
+
+    statusElem.innerText = "GAS応答: " + JSON.stringify(result);
 
     if (result.success) {
-      console.log("✅ 登録成功");
       statusElem.innerText = "登録完了！";
       document.getElementById("pushCard").style.display = "none";
     } else {
-      console.error("❌ GASから失敗応答:", result);
       statusElem.innerText = "登録失敗";
     }
 
   } catch (e) {
-    console.error("購読情報の送信失敗:", e);
-    statusElem.innerText = "登録失敗";
+    statusElem.innerText = "エラー: " + e.message;
   }
 }
 
