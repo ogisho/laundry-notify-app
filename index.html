@@ -480,26 +480,30 @@ async function postSettings(body, modalType) {
 
 // ===== FCM購読処理 =====
 async function registerPushSubscription() {
+  const statusElem = document.getElementById("pushStatus");
+  statusElem.innerText = "送信中..."; // ✅ ボタン押した直後に表示
+
   if (!("Notification" in window) || !("serviceWorker" in navigator)) {
     console.warn("このブラウザはPush通知をサポートしていません");
+    statusElem.innerText = "未対応ブラウザ";
     return;
   }
 
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
     console.warn("通知が許可されませんでした");
-    document.getElementById("pushStatus").innerText = "通知が許可されませんでした";
+    statusElem.innerText = "通知が許可されませんでした";
     return;
   }
 
-  const reg = await navigator.serviceWorker.ready;
-  const subscription = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
-  });
-
   try {
-    await fetch(PROXY_URL, {
+    const reg = await navigator.serviceWorker.ready;
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: "BDuuxVYaMYDPJ6zTLUXydaamhixSmChzSi57ggtYcO84DLvci0QqvJhbAUjgMhAMlPedVGkCj0jehh6hGbN4s"
+    });
+
+    const res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -508,15 +512,20 @@ async function registerPushSubscription() {
         subscription
       })
     });
-    console.log("購読トークンをGASへ送信しました:", subscription);
-    document.getElementById("pushStatus").innerText = "登録完了！";
+    const result = await res.json();
 
-    // ✅ 登録完了後はUIごと非表示
-    document.getElementById("pushCard").style.display = "none";
+    if (result.success) {
+      console.log("購読トークンをGASへ送信しました:", subscription);
+      statusElem.innerText = "登録完了！";
+      // ✅ 登録完了後はUIごと非表示
+      document.getElementById("pushCard").style.display = "none";
+    } else {
+      statusElem.innerText = "登録失敗";
+    }
 
   } catch (e) {
     console.error("購読情報の送信失敗:", e);
-    document.getElementById("pushStatus").innerText = "登録失敗";
+    statusElem.innerText = "登録失敗";
   }
 }
 
