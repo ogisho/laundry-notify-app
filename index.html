@@ -188,103 +188,15 @@
   </div>
 </body>
 
-<script type="module">
-// === セクション0: Firebase 初期化 ===
-// Firebase SDK を読み込んでアプリを初期化する処理
-
-// 0-1: Firebase モジュールの読み込み
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-// 今後通知で使うために messaging と getToken を import
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-messaging.js";
-
-// 0-2: Firebase の設定
-const firebaseConfig = {
-  apiKey: "AIzaSyCA1s7R1DCYyTkU9Hm_9F3GvgD6j95oD4o",
-  authDomain: "pushnotification-4395c.firebaseapp.com",
-  projectId: "pushnotification-4395c",
-  storageBucket: "pushnotification-4395c.firebasestorage.app",
-  messagingSenderId: "656011398931",
-  appId: "1:656011398931:web:527ddfc508a5f88f9cd4e6"
-};
-
-// 0-3: Firebase アプリを初期化
-const app = initializeApp(firebaseConfig);
-
-// 0-4: Messaging インスタンスを作成
-const messaging = getMessaging(app);
-
+<script>
 
 // === セクション1: Service Worker 登録 & 定数定義 ===
-
-// 1-1: Service Worker 登録
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/firebase-messaging-sw.js")
-    .then(async () => {
-      document.getElementById("pushStatus").innerText = "SW登録成功！";
-
-      // ★ ここで権限を即チェック
-      const permission = await Notification.requestPermission();
-      document.getElementById("pushStatus").innerText += " / 権限: " + permission;
-    })
-    .catch(err => {
-      document.getElementById("pushStatus").innerText = "SW登録失敗: " + err.message;
-    });
-}
 
 // 1-2: 定数定義
 const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
 const LIFF_ID = "2007511869-DXmQ2r0r";
 let userId = "";
 
-
-// === セクション2: Utility関数 ===
-
-// 2-1: VAPIDキーをUint8Arrayに変換する関数
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
-// 2-2: FCM ID をモーダル表示する関数
-function showFcmIdModal(fcmId) {
-  console.log("✅ showFcmIdModal called with:", fcmId);
-
-  // 既にモーダルがある場合は削除してから再作成
-  const oldModal = document.getElementById("fcmIdModal");
-  if (oldModal) oldModal.remove();
-
-  const modal = document.createElement("div");
-  modal.id = "fcmIdModal";
-  modal.style.position = "fixed";
-  modal.style.top = "0";
-  modal.style.left = "0";
-  modal.style.width = "100%";
-  modal.style.height = "100%";
-  modal.style.background = "rgba(0,0,0,0.6)";
-  modal.style.display = "flex";
-  modal.style.alignItems = "center";
-  modal.style.justifyContent = "center";
-  modal.style.zIndex = "9999";
-
-  modal.innerHTML = `
-    <div style="background:#fff;padding:20px;border-radius:10px;max-width:90%;text-align:center;">
-      <h3>FCM ID</h3>
-      <textarea style="width:100%;height:100px;font-size:12px;">${fcmId || "FCM IDが取得できませんでした"}</textarea>
-      <br>
-      <button id="closeFcmIdBtn" style="margin-top:10px;padding:6px 12px;">OK</button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  document.getElementById("closeFcmIdBtn").onclick = () => modal.remove();
-}
 
 
 // === セクション3: LIFF初期化 & UI制御 ===
@@ -353,6 +265,80 @@ function openModal(type) {
       cb.checked = isAllDays || laundryDaysArray.includes(cb.value);
     });
     document.getElementById("zipcodeInput").value = (window.zipcode !== '--') ? window.zipcode : '';
+  }<script>
+
+// === セクション1: 定数定義 ===
+const PROXY_URL = "https://cors-proxy.ogisho-other.workers.dev/";
+const LIFF_ID = "2007511869-DXmQ2r0r";
+let userId = "";
+
+// === セクション2: LIFF初期化 & UI制御 ===
+
+// 2-1: LIFF初期化処理
+async function initializeLiff() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      document.getElementById('loading').style.display = 'none';
+      return;
+    }
+    const profile = await liff.getProfile();
+    userId = profile.userId;
+    await fetchSettings();
+    await showLatestGasUrl();
+  } catch (e) {
+    console.error("LIFF初期化エラー:", e);
+    alert(`LIFFエラー: ${e.message || e}`);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+// 2-2: 通知時間セレクター初期化
+function initTimeSelectors() {
+  const hourSelect = document.getElementById("hourSelect");
+  const minuteSelect = document.getElementById("minuteSelect");
+  for (let h = 0; h < 24; h++) {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = h.toString().padStart(2, "0");
+    hourSelect.appendChild(opt);
+  }
+  for (let m = 0; m < 60; m += 5) {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = m.toString().padStart(2, "0");
+    minuteSelect.appendChild(opt);
+  }
+}
+
+// 2-3: GASの最新URLを表示
+async function showLatestGasUrl() {
+  try {
+    const res = await fetch(`${PROXY_URL}?view=getLatestUrl`);
+    const json = await res.json();
+    const elem = document.getElementById('currentUrlDisplay');
+    elem.innerText = json.success && json.url
+      ? `現在のGAS URL: ${json.url}`
+      : `現在のGAS URL取得に失敗しました`;
+  } catch (e) {
+    console.error("最新GAS URL取得エラー:", e);
+  }
+}
+
+// === セクション3: モーダル制御 ===
+
+// 3-1: モーダルを開く
+function openModal(type) {
+  const modal = document.getElementById(`modal-${type}`);
+  if (modal) modal.style.display = "flex";
+
+  if (type === 'laundry') {
+    const laundryDaysArray = (window.laundryDays || "").split(",");
+    const isAllDays = !window.laundryDays || laundryDaysArray.length === 0 || laundryDaysArray[0] === '--';
+    document.querySelectorAll("#modal-laundry input[type=checkbox]").forEach(cb => {
+      cb.checked = isAllDays || laundryDaysArray.includes(cb.value);
+    });
+    document.getElementById("zipcodeInput").value = (window.zipcode !== '--') ? window.zipcode : '';
   }
 
   if (type === 'umbrella') {
@@ -377,16 +363,15 @@ function openModal(type) {
   }
 }
 
-// 3-5: モーダルを閉じる
+// 3-2: モーダルを閉じる
 function closeModal(type) {
   const modal = document.getElementById(`modal-${type}`);
   if (modal) modal.style.display = "none";
 }
 
+// === セクション4: 設定取得・保存 ===
 
-// === セクション4: 設定取得・保存処理 ===
-
-// 4-1: 設定を取得する
+// 4-1: 設定取得
 async function fetchSettings() {
   try {
     const url = `${PROXY_URL}?userId=${userId}`;
@@ -398,23 +383,9 @@ async function fetchSettings() {
     }
 
     const {
-      notify,
-      notifyTime,
-      laundryDays,
-      zipcode,
-      laundryAddress,
-      umbrellaDays,
-      umbrellaZip1,
-      umbrellaZip2,
-      umbrellaZip3,
-      umbrellaZip4,
-      umbrellaZip5,
-      umbrellaAddress1,
-      umbrellaAddress2,
-      umbrellaAddress3,
-      umbrellaAddress4,
-      umbrellaAddress5,
-      fcmSubscribed
+      notify, notifyTime, laundryDays, zipcode, laundryAddress,
+      umbrellaDays, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5,
+      umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5
     } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
@@ -429,13 +400,12 @@ async function fetchSettings() {
     const umbrellaAddresses = [umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5];
     for (let i = 0; i < 5; i++) {
       const zipElem = document.getElementById(`umbrellaZip${i + 1}`);
-      if (umbrellaZips[i] && umbrellaZips[i] !== "--") {
-        zipElem.innerText = `${umbrellaZips[i]}（${umbrellaAddresses[i] || "--"}）`;
-      } else {
-        zipElem.innerText = "--";
-      }
+      zipElem.innerText = umbrellaZips[i] && umbrellaZips[i] !== "--"
+        ? `${umbrellaZips[i]}（${umbrellaAddresses[i] || "--"}）`
+        : "--";
     }
 
+    // グローバル保存
     window.notify = notify;
     window.notifyTime = notifyTime;
     window.laundryDays = laundryDays;
@@ -453,86 +423,57 @@ async function fetchSettings() {
     window.umbrellaAddress4 = umbrellaAddress4;
     window.umbrellaAddress5 = umbrellaAddress5;
 
-    // ✅ fcmSubscribed が true の場合はプッシュ通知カードを非表示にする
-    if (fcmSubscribed) {
-      document.getElementById("pushCard").style.display = "none";
-    }
-
   } catch (e) {
     console.error("設定取得エラー:", e);
     alert("設定取得エラーが発生しました");
   }
 }
 
-// 4-2: 通知メニュー保存
+// 4-2〜4-5: 各通知設定保存処理（Notify, Laundry, Umbrella, Train）
 async function saveNotifySettings() {
   const notifyEnabled = document.getElementById("modalToggle").checked ? "on" : "off";
   const hour = document.getElementById("hourSelect").value;
   const minute = document.getElementById("minuteSelect").value;
-
   await postSettings({
-    userId,
-    type: "notify",
-    notifyEnabled,
-    notifyTime: `${hour}:${minute}`
+    userId, type: "notify", notifyEnabled, notifyTime: `${hour}:${minute}`
   }, "notify");
 }
 
-// 4-3: 洗濯指数保存
 async function saveLaundrySettings() {
   const notifyDays = Array.from(document.querySelectorAll("#modal-laundry input[type=checkbox]:checked"))
-    .map(cb => cb.value)
-    .join(",");
+    .map(cb => cb.value).join(",");
   const zipcode = document.getElementById("zipcodeInput").value.trim();
-
   await postSettings({
-    userId,
-    type: "laundry",
-    notifyDays,
-    zipcode
+    userId, type: "laundry", notifyDays, zipcode
   }, "laundry");
 }
 
-// 4-4: 傘通知保存
 async function saveUmbrellaSettings() {
   const umbrellaDays = Array.from(document.querySelectorAll("#modal-umbrella input[type=checkbox]:checked"))
-    .map(cb => cb.value)
-    .join(",");
-
+    .map(cb => cb.value).join(",");
   const umbrellaZips = [];
   for (let i = 1; i <= 5; i++) {
     const zip = document.getElementById(`umbrellaZipInput${i}`).value.trim();
     if (zip) umbrellaZips.push(zip);
   }
-
   await postSettings({
-    userId,
-    type: "umbrella",
-    umbrellaDays,
-    umbrellaZip1: umbrellaZips[0] || "",
-    umbrellaZip2: umbrellaZips[1] || "",
-    umbrellaZip3: umbrellaZips[2] || "",
-    umbrellaZip4: umbrellaZips[3] || "",
-    umbrellaZip5: umbrellaZips[4] || ""
+    userId, type: "umbrella",
+    umbrellaZip1: umbrellaZips[0] || "", umbrellaZip2: umbrellaZips[1] || "",
+    umbrellaZip3: umbrellaZips[2] || "", umbrellaZip4: umbrellaZips[3] || "",
+    umbrellaZip5: umbrellaZips[4] || "", umbrellaDays
   }, "umbrella");
 }
 
-// 4-5: 路線通知保存
 async function saveTrainSettings() {
   const trains = [];
   for (let i = 1; i <= 5; i++) {
     const val = document.getElementById(`trainInput${i}`).value.trim();
     if (val) trains.push(val);
   }
-
   await postSettings({
-    userId,
-    type: "train",
-    train1: trains[0] || "",
-    train2: trains[1] || "",
-    train3: trains[2] || "",
-    train4: trains[3] || "",
-    train5: trains[4] || ""
+    userId, type: "train",
+    train1: trains[0] || "", train2: trains[1] || "",
+    train3: trains[2] || "", train4: trains[3] || "", train5: trains[4] || ""
   }, "train");
 }
 
@@ -574,72 +515,17 @@ async function postSettings(body, modalType) {
   }
 }
 
-
-// === セクション5: FCM購読処理 ===
-async function registerPushSubscription() {
-  const statusElem = document.getElementById("pushStatus");
-  statusElem.innerText = "ボタン反応あり！";
-
-  if (!("Notification" in window)) {
-    statusElem.innerText = "未対応ブラウザ";
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  statusElem.innerText = "権限: " + permission;   // ← ここでUIに表示
-
-  if (permission !== "granted") {
-    statusElem.innerText = "通知が許可されませんでした";
-    return;
-  }
-
-  try {
-    statusElem.innerText = "FCMトークン取得中...";
-
-    const fcmToken = await getToken(messaging, {
-      vapidKey: "BMEFvx-S7anDcctuAiffHux0Jqhb9C0pKLjMwqPxWhuXxveYV8UD36QIrxrKltN4SdSAY2nR0h1hsEH7nZebV3E"
-    });
-
-    statusElem.innerText = "FCMトークン: " + (fcmToken || "null");
-
-    if (!fcmToken) {
-      statusElem.innerText = "トークン取得失敗";
-      return;
-    }
-
-    const res = await fetch(PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, type: "fcm", token: fcmToken })
-    });
-    const result = await res.json();
-
-    statusElem.innerText = "GAS応答: " + JSON.stringify(result);
-
-    if (result.success) {
-      statusElem.innerText = "登録完了！";
-      document.getElementById("pushCard").style.display = "none";
-    } else {
-      statusElem.innerText = "登録失敗";
-    }
-
-  } catch (e) {
-    statusElem.innerText = "エラー: " + e.message;
-  }
-}
-
-
-// === セクション6: ページロード時の処理 ===
+// === セクション5: ページロード時初期処理 ===
 window.onload = () => {
   initTimeSelectors();
   initializeLiff();
 };
-  
-// === セクション7: モーダル起動用イベントリスナー（編集ボタン対応） ===
+
+// === セクション6: 編集ボタンによるモーダル表示 ===
 document.getElementById("editNotifyBtn")?.addEventListener("click", () => openModal("notify"));
 document.getElementById("editLaundryBtn")?.addEventListener("click", () => openModal("laundry"));
 document.getElementById("editUmbrellaBtn")?.addEventListener("click", () => openModal("umbrella"));
-  
+
 </script>
 </body>
 </html>
