@@ -643,6 +643,12 @@ window.onload = () => {
   initTimeSelectors();
   initializeLiff();
 };
+  
+// === セクション7: モーダル起動用イベントリスナー（編集ボタン対応） ===
+document.getElementById("editNotifyBtn")?.addEventListener("click", () => openModal("notify"));
+document.getElementById("editLaundryBtn")?.addEventListener("click", () => openModal("laundry"));
+document.getElementById("editUmbrellaBtn")?.addEventListener("click", () => openModal("umbrella"));
+  
 </script>
 </body>
 </html>
