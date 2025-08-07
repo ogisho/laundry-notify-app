@@ -365,6 +365,9 @@ async function fetchSettings() {
     // ✅ メールアドレスをinputに表示
     const emailInput = document.getElementById("emailInput");
     if (emailInput) emailInput.value = email || "";
+    // ✅ メールアドレスをTOP表示にも反映
+    const emailText = document.getElementById("emailText");
+    if (emailText) emailText.innerText = email || "--";
 
     // グローバル保存
     window.notify = notify;
