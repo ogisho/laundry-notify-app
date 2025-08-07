@@ -344,6 +344,7 @@ async function fetchSettings() {
       email // ✅ メールアドレスを追加
     } = json.data;
 
+    document.getElementById("emailInput").value = email || "";
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
     document.getElementById("notifyTime").innerText = notifyTime !== "--:--" ? notifyTime : "--:--";
     document.getElementById("notifyDays").innerText = laundryDays !== "--" ? laundryDays : "--";
