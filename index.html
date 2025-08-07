@@ -340,7 +340,8 @@ async function fetchSettings() {
     const {
       notify, notifyTime, laundryDays, zipcode, laundryAddress,
       umbrellaDays, umbrellaZip1, umbrellaZip2, umbrellaZip3, umbrellaZip4, umbrellaZip5,
-      umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5
+      umbrellaAddress1, umbrellaAddress2, umbrellaAddress3, umbrellaAddress4, umbrellaAddress5,
+      email // ✅ メールアドレスを追加
     } = json.data;
 
     document.getElementById("statusText").innerText = notify === "on" ? "ON" : "OFF";
@@ -360,6 +361,10 @@ async function fetchSettings() {
         : "--";
     }
 
+    // ✅ メールアドレスをinputに表示
+    const emailInput = document.getElementById("emailInput");
+    if (emailInput) emailInput.value = email || "";
+
     // グローバル保存
     window.notify = notify;
     window.notifyTime = notifyTime;
@@ -377,6 +382,7 @@ async function fetchSettings() {
     window.umbrellaAddress3 = umbrellaAddress3;
     window.umbrellaAddress4 = umbrellaAddress4;
     window.umbrellaAddress5 = umbrellaAddress5;
+    window.email = email;
 
   } catch (e) {
     console.error("設定取得エラー:", e);
