@@ -300,6 +300,21 @@ function openModal(type) {
       document.getElementById("hourSelect").value = h;
       document.getElementById("minuteSelect").value = m;
     }
+
+    // ✅ 追加: メールアドレスを取得して input に反映
+    fetch(`${GAS_URL}?view=check&id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.email) {
+          document.getElementById("emailInput").value = data.email;
+        } else {
+          document.getElementById("emailInput").value = "";
+        }
+      })
+      .catch(err => {
+        console.error("メール取得エラー:", err);
+        document.getElementById("emailInput").value = "";
+      });
   }
 }
 
