@@ -57,15 +57,16 @@
 
   <h2>通知設定画面</h2>
 
-  <!-- 通知メニュー -->
-  <div class="card">
-    <div class="section-title">
-      通知メニュー
-      <button class="edit-btn" onclick="openModal('notify')">編集</button>
-    </div>
-    <div class="row"><span>通知設定：</span><span id="statusText">--</span></div>
-    <div class="row"><span>通知時間：</span><span id="notifyTime">--:--</span></div>
+ <!-- 通知メニュー -->
+<div class="card">
+  <div class="section-title">
+    通知メニュー
+    <button class="edit-btn" onclick="openModal('notify')">編集</button>
   </div>
+  <div class="row"><span>通知設定：</span><span id="statusText">--</span></div>
+  <div class="row"><span>通知時間：</span><span id="notifyTime">--:--</span></div>
+  <div class="row"><span>メールアドレス：</span><span id="emailDisplay">--</span></div>
+</div>
 
   <!-- 洗濯指数 -->
   <div class="card">
@@ -106,20 +107,36 @@
 
   <!-- （モーダルは省略せず現状通り全部残す） -->
   <!-- モーダル: 通知メニュー -->
-  <div class="modal" id="modal-notify">
-    <div class="modal-content">
-      <h3>通知メニューの編集</h3>
-      <label>通知設定：<input type="checkbox" id="modalToggle"></label><br><br>
-      <label>通知時間：
-        <select id="hourSelect"></select>：<select id="minuteSelect"></select>
-      </label>
-      <p class="save-status" id="notifySaveStatus"></p>
-      <div class="modal-buttons">
-        <button onclick="closeModal('notify')">キャンセル</button>
-        <button onclick="saveNotifySettings()">保存</button>
-      </div>
+<div class="modal" id="modal-notify">
+  <div class="modal-content">
+    <h3>通知メニューの編集</h3>
+
+    <!-- 通知ON/OFF -->
+    <label>通知設定：
+      <input type="checkbox" id="modalToggle">
+    </label><br><br>
+
+    <!-- 通知時間 -->
+    <label>通知時間：
+      <select id="hourSelect"></select>：
+      <select id="minuteSelect"></select>
+    </label><br><br>
+
+    <!-- ✅ ここが追加された部分 -->
+    <label>メールアドレス：
+      <input type="email" id="emailInput" placeholder="example@example.com">
+    </label><br><br>
+
+    <!-- 保存ステータス -->
+    <p class="save-status" id="notifySaveStatus"></p>
+
+    <!-- ボタン -->
+    <div class="modal-buttons">
+      <button onclick="closeModal('notify')">キャンセル</button>
+      <button onclick="saveNotifySettings()">保存</button>
     </div>
   </div>
+</div>
 
   <!-- モーダル: 洗濯指数 -->
   <div class="modal" id="modal-laundry">
